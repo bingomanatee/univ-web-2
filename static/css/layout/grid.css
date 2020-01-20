@@ -1,0 +1,66 @@
+.grid {
+  display: grid;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+  grid-template-rows: [top] minmax(2rem, 4rem) [titles] minmax(0, 2rem) [content] auto [bottom];
+  grid-template-columns: [left] auto [right];
+}
+.grid .grid-head {
+  grid-row-start: top;
+  grid-row-end: titles;
+  grid-column-start: left;
+  grid-column-end: right;
+  overflow: hidden;
+  padding-top: 0.5rem;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+}
+.grid .grid-head .headline {
+  flex: 1;
+}
+.grid .grid-head .headline h1 {
+  margin: 0;
+}
+.grid .grid-head .controls {
+  font-style: normal;
+  display: flex;
+  flex-direction: row;
+  align-items: baseline;
+  margin-right: 1rem;
+}
+.grid .grid-title {
+  grid-row-start: titles;
+  grid-row-end: content;
+  grid-column-start: left;
+  grid-column-end: right;
+  overflow: hidden;
+  align-self: center;
+  line-height: 150%;
+}
+.grid .grid-title .grid-cell {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  border-bottom: 2px solid #5c0000;
+}
+.grid .grid-title .grid-cell span {
+  flex: 1;
+}
+.grid .grid-title .grid-cell img {
+  margin-right: 0.5rem;
+}
+.grid .grid-title .grid-label {
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-weight: 700;
+}
+.grid .grid-content {
+  grid-row-start: content;
+  grid-row-end: bottom;
+  grid-column-start: left;
+  grid-column-end: right;
+  overflow: auto;
+}
+
+/*# sourceMappingURL=grid.css.map */

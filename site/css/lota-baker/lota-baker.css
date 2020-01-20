@@ -1,0 +1,160 @@
+/**
+ * @license
+ * MyFonts Webfont Build ID 3819958, 2019-10-04T19:44:07-0400
+ *
+ * The fonts listed in this notice are subject to the End User License
+ * Agreement(s) entered into by the website owner. All other parties are
+ * explicitly restricted from using the Licensed Webfonts(s).
+ *
+ * You may obtain a valid license at the URLs below.
+ *
+ * Webfont: BakerHalfBare-Regular by Ingrimayne Type
+ * URL: https://www.myfonts.com/fonts/ingrimayne/bakerhalf/bare/
+ * Copyright: Copyright (c) 2004 Robert Schenk. All rights reserved.
+ *
+ * Webfont: BakerHalfDozen-Regular by Ingrimayne Type
+ * URL: https://www.myfonts.com/fonts/ingrimayne/bakerhalf/dozen/
+ * Copyright: Copyright (c) 2004 Robert Schenk. All rights reserved.
+ *
+ * Webfont: BakerHalfBare-Bold by Ingrimayne Type
+ * URL: https://www.myfonts.com/fonts/ingrimayne/bakerhalf/bare-bold/
+ * Copyright: Copyright (c) 2004 Robert Schenk. All rights reserved.
+ *
+ * Webfont: BakerHalfDozen-Bold by Ingrimayne Type
+ * URL: https://www.myfonts.com/fonts/ingrimayne/bakerhalf/dozen-bold/
+ * Copyright: Copyright (c) 2004 Robert Schenk. All rights reserved.
+ *
+ * Webfont: LotaGrotesque-BoldIt by Los Andes
+ * URL: https://www.myfonts.com/fonts/los-andes/lota-grotesque/bold-italic/
+ * Copyright: Copyright &#x00A9; 2017 by Daniel Hernandez. All rights reserved.
+ *
+ * Webfont: LotaGrotesque-LightIt by Los Andes
+ * URL: https://www.myfonts.com/fonts/los-andes/lota-grotesque/light-italic/
+ * Copyright: Copyright &#x00A9; 2017 by Daniel Hernandez. All rights reserved.
+ *
+ * Webfont: LotaGrotesque-RegularIt by Los Andes
+ * URL: https://www.myfonts.com/fonts/los-andes/lota-grotesque/regular-italic/
+ * Copyright: Copyright &#x00A9; 2017 by Daniel Hernandez. All rights reserved.
+ *
+ * Webfont: LotaGrotesque-Black by Los Andes
+ * URL: https://www.myfonts.com/fonts/los-andes/lota-grotesque/black/
+ * Copyright: Copyright &#x00A9; 2017 by Daniel Hernandez. All rights reserved.
+ *
+ * Webfont: LotaGrotesque-BlackIt by Los Andes
+ * URL: https://www.myfonts.com/fonts/los-andes/lota-grotesque/black-italic/
+ * Copyright: Copyright &#x00A9; 2017 by Daniel Hernandez. All rights reserved.
+ *
+ * Webfont: LotaGrotesque-Bold by Los Andes
+ * URL: https://www.myfonts.com/fonts/los-andes/lota-grotesque/bold/
+ * Copyright: Copyright &#x00A9; 2017 by Daniel Hernandez. All rights reserved.
+ *
+ * Webfont: LotaGrotesque-Light by Los Andes
+ * URL: https://www.myfonts.com/fonts/los-andes/lota-grotesque/light/
+ * Copyright: Copyright &#x00A9; 2017 by Daniel Hernandez. All rights reserved.
+ *
+ * Webfont: LotaGrotesque-Regular by Los Andes
+ * URL: https://www.myfonts.com/fonts/los-andes/lota-grotesque/regular/
+ * Copyright: Copyright &#x00A9; 2017 by Daniel Hernandez. All rights reserved.
+ *
+ * Webfont: LotaGrotesqueAlt1-Black by Los Andes
+ * URL: https://www.myfonts.com/fonts/los-andes/lota-grotesque/alt-1-black/
+ * Copyright: Copyright &#x00A9; 2017 by Daniel Hernandez. All rights reserved.
+ *
+ * Webfont: LotaGrotesqueAlt1-BlackIt by Los Andes
+ * URL: https://www.myfonts.com/fonts/los-andes/lota-grotesque/alt-1-black-italic/
+ * Copyright: Copyright &#x00A9; 2017 by Daniel Hernandez. All rights reserved.
+ *
+ * Webfont: LotaGrotesqueAlt1-Bold by Los Andes
+ * URL: https://www.myfonts.com/fonts/los-andes/lota-grotesque/alt-1-bold/
+ * Copyright: Copyright &#x00A9; 2017 by Daniel Hernandez. All rights reserved.
+ *
+ * Webfont: LotaGrotesqueAlt1-BoldIt by Los Andes
+ * URL: https://www.myfonts.com/fonts/los-andes/lota-grotesque/alt-1-bold-italic/
+ * Copyright: Copyright &#x00A9; 2017 by Daniel Hernandez. All rights reserved.
+ *
+ * Webfont: LotaGrotesqueAlt2-Black by Los Andes
+ * URL: https://www.myfonts.com/fonts/los-andes/lota-grotesque/alt-2-black/
+ * Copyright: Copyright &#x00A9; 2017 by Daniel Hernandez. All rights reserved.
+ *
+ * Webfont: LotaGrotesqueAlt2-BlackIt by Los Andes
+ * URL: https://www.myfonts.com/fonts/los-andes/lota-grotesque/alt-2-black-italic/
+ * Copyright: Copyright &#x00A9; 2017 by Daniel Hernandez. All rights reserved.
+ *
+ * Webfont: LotaGrotesqueAlt2-Bold by Los Andes
+ * URL: https://www.myfonts.com/fonts/los-andes/lota-grotesque/alt-2-bold/
+ * Copyright: Copyright &#x00A9; 2017 by Daniel Hernandez. All rights reserved.
+ *
+ * Webfont: LotaGrotesqueAlt2-BoldIt by Los Andes
+ * URL: https://www.myfonts.com/fonts/los-andes/lota-grotesque/alt-2-bold-italic/
+ * Copyright: Copyright &#x00A9; 2017 by Daniel Hernandez. All rights reserved.
+ *
+ *
+ * License: https://www.myfonts.com/viewlicense?type=web&buildid=3819958
+ * Licensed pageviews: 10,000
+ *
+ * © 2019 MyFonts Inc
+*/
+
+
+/* @import must be at top of file, otherwise CSS will not work
+@import url("//hello.myfonts.net/count/3a49b6");
+*/
+
+@font-face {font-family: 'BakerHalfBare-Regular';src: url('webfonts/3A49B6_0_0.eot');src: url('webfonts/3A49B6_0_0.eot?#iefix') format('embedded-opentype'),url('webfonts/3A49B6_0_0.woff2') format('woff2'),url('webfonts/3A49B6_0_0.woff') format('woff'),url('webfonts/3A49B6_0_0.ttf') format('truetype');}
+
+
+@font-face {font-family: 'BakerHalfDozen-Regular';src: url('webfonts/3A49B6_1_0.eot');src: url('webfonts/3A49B6_1_0.eot?#iefix') format('embedded-opentype'),url('webfonts/3A49B6_1_0.woff2') format('woff2'),url('webfonts/3A49B6_1_0.woff') format('woff'),url('webfonts/3A49B6_1_0.ttf') format('truetype');}
+
+
+@font-face {font-family: 'BakerHalfBare-Bold';src: url('webfonts/3A49B6_2_0.eot');src: url('webfonts/3A49B6_2_0.eot?#iefix') format('embedded-opentype'),url('webfonts/3A49B6_2_0.woff2') format('woff2'),url('webfonts/3A49B6_2_0.woff') format('woff'),url('webfonts/3A49B6_2_0.ttf') format('truetype');}
+
+
+@font-face {font-family: 'BakerHalfDozen-Bold';src: url('webfonts/3A49B6_3_0.eot');src: url('webfonts/3A49B6_3_0.eot?#iefix') format('embedded-opentype'),url('webfonts/3A49B6_3_0.woff2') format('woff2'),url('webfonts/3A49B6_3_0.woff') format('woff'),url('webfonts/3A49B6_3_0.ttf') format('truetype');}
+
+
+@font-face {font-family: 'LotaGrotesque-BoldIt';src: url('webfonts/3A49B6_4_0.eot');src: url('webfonts/3A49B6_4_0.eot?#iefix') format('embedded-opentype'),url('webfonts/3A49B6_4_0.woff2') format('woff2'),url('webfonts/3A49B6_4_0.woff') format('woff'),url('webfonts/3A49B6_4_0.ttf') format('truetype');}
+
+
+@font-face {font-family: 'LotaGrotesque-LightIt';src: url('webfonts/3A49B6_5_0.eot');src: url('webfonts/3A49B6_5_0.eot?#iefix') format('embedded-opentype'),url('webfonts/3A49B6_5_0.woff2') format('woff2'),url('webfonts/3A49B6_5_0.woff') format('woff'),url('webfonts/3A49B6_5_0.ttf') format('truetype');}
+
+
+@font-face {font-family: 'LotaGrotesque-RegularIt';src: url('webfonts/3A49B6_6_0.eot');src: url('webfonts/3A49B6_6_0.eot?#iefix') format('embedded-opentype'),url('webfonts/3A49B6_6_0.woff2') format('woff2'),url('webfonts/3A49B6_6_0.woff') format('woff'),url('webfonts/3A49B6_6_0.ttf') format('truetype');}
+
+
+@font-face {font-family: 'LotaGrotesque-Black';src: url('webfonts/3A49B6_7_0.eot');src: url('webfonts/3A49B6_7_0.eot?#iefix') format('embedded-opentype'),url('webfonts/3A49B6_7_0.woff2') format('woff2'),url('webfonts/3A49B6_7_0.woff') format('woff'),url('webfonts/3A49B6_7_0.ttf') format('truetype');}
+
+
+@font-face {font-family: 'LotaGrotesque-BlackIt';src: url('webfonts/3A49B6_8_0.eot');src: url('webfonts/3A49B6_8_0.eot?#iefix') format('embedded-opentype'),url('webfonts/3A49B6_8_0.woff2') format('woff2'),url('webfonts/3A49B6_8_0.woff') format('woff'),url('webfonts/3A49B6_8_0.ttf') format('truetype');}
+
+
+@font-face {font-family: 'LotaGrotesque-Bold';src: url('webfonts/3A49B6_9_0.eot');src: url('webfonts/3A49B6_9_0.eot?#iefix') format('embedded-opentype'),url('webfonts/3A49B6_9_0.woff2') format('woff2'),url('webfonts/3A49B6_9_0.woff') format('woff'),url('webfonts/3A49B6_9_0.ttf') format('truetype');}
+
+
+@font-face {font-family: 'LotaGrotesque-Light';src: url('webfonts/3A49B6_A_0.eot');src: url('webfonts/3A49B6_A_0.eot?#iefix') format('embedded-opentype'),url('webfonts/3A49B6_A_0.woff2') format('woff2'),url('webfonts/3A49B6_A_0.woff') format('woff'),url('webfonts/3A49B6_A_0.ttf') format('truetype');}
+
+
+@font-face {font-family: 'LotaGrotesque-Regular';src: url('webfonts/3A49B6_B_0.eot');src: url('webfonts/3A49B6_B_0.eot?#iefix') format('embedded-opentype'),url('webfonts/3A49B6_B_0.woff2') format('woff2'),url('webfonts/3A49B6_B_0.woff') format('woff'),url('webfonts/3A49B6_B_0.ttf') format('truetype');}
+
+
+@font-face {font-family: 'LotaGrotesqueAlt1-Black';src: url('webfonts/3A49B6_C_0.eot');src: url('webfonts/3A49B6_C_0.eot?#iefix') format('embedded-opentype'),url('webfonts/3A49B6_C_0.woff2') format('woff2'),url('webfonts/3A49B6_C_0.woff') format('woff'),url('webfonts/3A49B6_C_0.ttf') format('truetype');}
+
+
+@font-face {font-family: 'LotaGrotesqueAlt1-BlackIt';src: url('webfonts/3A49B6_D_0.eot');src: url('webfonts/3A49B6_D_0.eot?#iefix') format('embedded-opentype'),url('webfonts/3A49B6_D_0.woff2') format('woff2'),url('webfonts/3A49B6_D_0.woff') format('woff'),url('webfonts/3A49B6_D_0.ttf') format('truetype');}
+
+
+@font-face {font-family: 'LotaGrotesqueAlt1-Bold';src: url('webfonts/3A49B6_E_0.eot');src: url('webfonts/3A49B6_E_0.eot?#iefix') format('embedded-opentype'),url('webfonts/3A49B6_E_0.woff2') format('woff2'),url('webfonts/3A49B6_E_0.woff') format('woff'),url('webfonts/3A49B6_E_0.ttf') format('truetype');}
+
+
+@font-face {font-family: 'LotaGrotesqueAlt1-BoldIt';src: url('webfonts/3A49B6_F_0.eot');src: url('webfonts/3A49B6_F_0.eot?#iefix') format('embedded-opentype'),url('webfonts/3A49B6_F_0.woff2') format('woff2'),url('webfonts/3A49B6_F_0.woff') format('woff'),url('webfonts/3A49B6_F_0.ttf') format('truetype');}
+
+
+@font-face {font-family: 'LotaGrotesqueAlt2-Black';src: url('webfonts/3A49B6_10_0.eot');src: url('webfonts/3A49B6_10_0.eot?#iefix') format('embedded-opentype'),url('webfonts/3A49B6_10_0.woff2') format('woff2'),url('webfonts/3A49B6_10_0.woff') format('woff'),url('webfonts/3A49B6_10_0.ttf') format('truetype');}
+
+
+@font-face {font-family: 'LotaGrotesqueAlt2-BlackIt';src: url('webfonts/3A49B6_11_0.eot');src: url('webfonts/3A49B6_11_0.eot?#iefix') format('embedded-opentype'),url('webfonts/3A49B6_11_0.woff2') format('woff2'),url('webfonts/3A49B6_11_0.woff') format('woff'),url('webfonts/3A49B6_11_0.ttf') format('truetype');}
+
+
+@font-face {font-family: 'LotaGrotesqueAlt2-Bold';src: url('webfonts/3A49B6_12_0.eot');src: url('webfonts/3A49B6_12_0.eot?#iefix') format('embedded-opentype'),url('webfonts/3A49B6_12_0.woff2') format('woff2'),url('webfonts/3A49B6_12_0.woff') format('woff'),url('webfonts/3A49B6_12_0.ttf') format('truetype');}
+
+
+@font-face {font-family: 'LotaGrotesqueAlt2-BoldIt';src: url('webfonts/3A49B6_13_0.eot');src: url('webfonts/3A49B6_13_0.eot?#iefix') format('embedded-opentype'),url('webfonts/3A49B6_13_0.woff2') format('woff2'),url('webfonts/3A49B6_13_0.woff') format('woff'),url('webfonts/3A49B6_13_0.ttf') format('truetype');}

@@ -1,0 +1,224 @@
+@import './constants.scss';
+@import './layout/grid.scss';
+@import './layout/button.scss';
+
+html, body, #root {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  overflow: hidden;
+  font-size: $GLOBAL_FONT_SIZE;
+  @include media-small {
+    font-size: $GLOBAL_FONT_SIZE_SMALL;
+  }
+  @include media-medium {
+    font-size: $GLOBAL_FONT_SIZE_MEDIUM;
+  }
+  font-family: $BODY_FONT_FAMILY;
+}
+
+body {
+  position: relative;
+}
+
+main {
+  display: grid;
+  height: 100%;
+  overflow: hidden;
+  grid-template-rows: [top] $PAGE_HEAD_HEIGHT [head-1] minmax(0, $PAGE_HEAD_SUB_HEIGHT) [content] auto [bottom];
+  grid-template-columns: [left] $PAGE_ICON_WIDTH [menu-labels] $PAGE_LABEL-WIDTH [content] auto [right];
+
+}
+
+header.page-header {
+  background-color: $C_HEADER_BG;
+  padding: 0.5rem;
+  grid-column-start: left;
+  grid-column-end: right;
+  grid-row-start: top;
+  grid-row-end: head-1;
+  display: flex;
+  justify-content: space-between;
+  font-family: $HEADLINE_FONT_FAMILY;
+
+  &.page-header-subhead {
+    grid-column-start: left;
+    grid-column-end: right;
+    grid-row-start: head-1;
+    grid-row-end: content;
+    background-color: $C_SUBHEAD_BG;
+    font-size: 0.7em;
+    padding: $SMALL_SPACE;
+  }
+
+  .logo {
+    flex: 0;
+    padding: 2px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-right: 2rem;
+  }
+
+  nav {
+    flex: 1;
+    grid-column-start: left;
+    grid-column-end: right;
+    grid-row-start: top;
+    grid-row-end: content-top;
+
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+
+    a {
+      color: $C_HEADER_TEXT;
+      text-decoration: none;
+    }
+  }
+}
+
+article.content {
+  grid-row-start: content;
+  grid-row-end: bottom;
+  grid-column-start: content;
+  grid-column-end: right;
+  overflow-y: scroll;
+  overflow-x: hidden;
+  padding-left: 2rem;
+  @include media-small() {
+    grid-column-start: menu-labels;
+  }
+}
+
+#leftnav {
+  grid-row-start: content;
+  grid-row-end: bottom;
+  grid-column-start: left;
+  grid-column-end: content;
+  overflow: hidden;
+
+  > div {
+    padding-left: 1rem;
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+
+    a, a:hover, a:visited {
+      text-decoration: none;
+      color: $C_LEFTNAV_TEXT;
+    }
+  }
+
+  background-color: $C_LEFTNAV_BG;
+  color: $C_LEFTNAV_TEXT;
+
+  @include media-small() {
+    grid-column-end: menu-labels;
+  }
+}
+
+.control-wrapper {
+  @include control-wrapper;
+}
+
+#modal {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100vw;
+  height: 100vh;
+
+  .modal-back {
+    @include abs-fixed;
+    background-color: rgba(0, 0, 0, 0.25);
+    z-index: 1000;
+  }
+
+  .modal-inner {
+    z-index: 1100;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    @include abs-fixed;
+    &.modal-inner-login article {
+      width: 50%;
+      min-width: 600px;
+      height: auto;
+
+      max-height: 100vh;
+      flex: 0;
+    }
+
+    article {
+      margin: $LARGE_SPACE * 1.5;
+      padding: $MED_SPACE $LARGE_SPACE;
+      background-color: $WHITE;
+      -webkit-box-shadow: 14px 15px 35px 8px $GRAY_TRANS_75;
+      -moz-box-shadow: 14px 15px 35px 8px $GRAY_TRANS_75;
+      box-shadow: 14px 15px 35px 8px $GRAY_TRANS_75;
+      flex: 1;
+    }
+
+    .modal-main {
+      display: flex;
+      justify-content: center;
+
+      form {
+        flex: 1;
+        max-width: 800px;
+      }
+    }
+  }
+}
+
+.input-field {
+  border: 1px solid black;
+  padding:$SMALL_SPACE $MED_SPACE ;
+  background-color: $WHITE;
+  font-family: $INPUT_FONT_FAMILY;
+  font-size: $GLOBAL_FONT_SIZE * $INPUT_FIELD_SCALE;
+  line-height: 130%;
+  border-radius: 0;
+  outline: none !important;
+
+  &.input-field-search {
+    border-top-left-radius: 8px !important;
+    border-bottom-left-radius: 8px !important;
+  }
+  &:hover {
+    border: 2px solid $PURPLE;
+  }
+  &:active {
+    border: 2px solid $PURPLE;
+  }
+}
+
+.form-error {
+  font-family: $INPUT_FONT_FAMILY;
+  font-size: $GLOBAL_FONT_SIZE * $INPUT_FIELD_SCALE * 0.8;
+  color: $FORM_ERROR_MESSAGE;
+}
+
+.pinny {
+  position: absolute;
+  display: block;
+  right: 0;
+  top: 0;
+  width: 332px;
+  height: 340px;
+  z-index: 1000000;
+  background-repeat: no-repeat;
+  background-position: right top;
+  .pinny-comment {
+    position: absolute;
+    right: 5rem;
+    top: 2rem;
+    background-color: rgba(255,255,255,0.8);
+    width: 200px;
+    padding: 1rem;
+    border-radius: 1rem;
+    z-index: 2000000;
+  }
+}

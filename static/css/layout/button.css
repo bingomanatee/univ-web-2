@@ -1,0 +1,41 @@
+button {
+  -moz-appearance: none;
+  -webkit-appearance: none;
+  line-height: 100%;
+  padding: 0.5rem 1rem;
+  border: none;
+  background: #F4F4F4;
+  color: #0b5186;
+  font-size: 20px;
+  white-space: nowrap;
+  border-radius: 20px;
+  outline: none !important;
+}
+button.button-icon {
+  background-color: white;
+}
+button.button-end-border {
+  border: 1px solid #8A8C8F;
+  border-left: none;
+  border-radius: 0;
+  border-top-right-radius: 8px !important;
+  border-bottom-right-radius: 8px !important;
+  margin-right: 0.5rem;
+  margin-right: 0.5rem;
+}
+button.main {
+  background-color: #81cf48;
+  color: #000000;
+}
+button.main:hover {
+  background-color: #c7e9ad;
+}
+button.cancel {
+  background-color: #dad3e4;
+  color: #000000;
+}
+button.cancel:hover {
+  background-color: #f5f3f8;
+}
+
+/*# sourceMappingURL=button.css.map */

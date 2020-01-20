@@ -1,0 +1,70 @@
+.grid-row-alpha {
+  display: grid;
+  grid-template-rows: repeat(auto-fill, [top] auto [bottom]);
+  grid-template-columns: [left] 6rem [name] 18rem [notes] auto [right];
+}
+@media (max-width: 799px) {
+  .grid-row-alpha {
+    grid-template-columns: [left] 4rem [name] 12rem [notes] auto [right];
+  }
+}
+.grid-row-alpha .num {
+  grid-column-start: left;
+  grid-column-end: name;
+  overflow: hidden;
+}
+.grid-row-alpha .name {
+  grid-column-start: name;
+  grid-column-end: notes;
+  overflow: hidden;
+}
+.grid-row-alpha .notes {
+  grid-column-start: notes;
+  grid-column-end: right;
+  overflow: hidden;
+}
+
+.grid-row-beta {
+  display: grid;
+  grid-template-rows: repeat(auto-fill, [top] auto [bottom]);
+  grid-template-columns: [left] 1.5fr [name] 2fr [status] 10rem [owner] 1fr [created] 10rem [right];
+}
+@media (min-width: 800px) and (max-width: 1199px) {
+  .grid-row-beta {
+    grid-template-columns: [left] 1fr [name] 2.5fr [status] 8rem [owner] 2fr [created] 8rem [right];
+  }
+}
+@media (max-width: 799px) {
+  .grid-row-beta {
+    grid-template-columns: [left] 0 [name] 10rem [status] 8rem [owner] auto [created] 7rem [right];
+  }
+}
+.grid-row-beta .id {
+  grid-column-start: left;
+  grid-column-end: name;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+}
+.grid-row-beta .name {
+  grid-column-start: name;
+  grid-column-end: status;
+  overflow: hidden;
+}
+.grid-row-beta .status {
+  grid-column-start: status;
+  grid-column-end: owner;
+  overflow: hidden;
+}
+.grid-row-beta .owner {
+  grid-column-start: owner;
+  grid-column-end: created;
+  overflow: hidden;
+}
+.grid-row-beta .created {
+  grid-column-start: created;
+  grid-column-end: right;
+  overflow: hidden;
+}
+
+/*# sourceMappingURL=containers.css.map */

@@ -1,0 +1,138 @@
+// ---- page layout
+
+$PAGE_HEAD_HEIGHT: 50px;
+$PAGE_HEAD_SUB_HEIGHT: 1.5rem;
+$PAGE_FOOTER_HEIGHT: 6rem;
+$PAGE_ICON_WIDTH: 60px;
+$PAGE_LABEL_WIDTH: 12rem;
+
+$SMALL_SPACE: 2px;
+$MED_SMALL_SPACE: 0.5rem;
+$MED_SPACE: 1rem;
+$LARGE_SPACE: 2rem;
+// -- grid layout
+
+$GRID_HEAD: 4rem;
+$GRID_TITLES: 2rem;
+$CONTENT_GRID_PADDING: $MED_SPACE;
+$CONTENT_GRID_PADDING_SMALL: $MED_SMALL_SPACE;
+
+// ----- responsive
+//  --"small" is < $responsiveSmall;
+// -- "medium" is $responsiveSmall ... < $responsiveMedium
+// -- "large" (default) is >= $responsiveMedium
+$responsiveSmall: 800px;
+$responsiveMedium: 1200px;
+
+//--default size reduction for smaller screens
+$RESPONSIVE_SMALL_SCALE: 0.75;
+$RESPONSIVE_MEDIUM_SCALE: 0.85;
+
+
+// this is the default assumption for main.scss
+@mixin media-large {
+  @media (min-width: #{$responsiveMedium}) {
+    @content;
+  }
+}
+
+@mixin media-medium {
+  @media (min-width: #{$responsiveSmall}) and (max-width: #{$responsiveMedium - 1px}) {
+    @content;
+  }
+}
+
+@mixin media-medium-and-small {
+  @media (max-width: #{$responsiveMedium - 1px}) {
+    @content;
+  }
+}
+
+@mixin media-small {
+  @media (max-width: #{$responsiveSmall - 1px}) {
+    @content;
+  }
+}
+
+@mixin abs-fixed {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 100vw;
+  height: 100vh;
+}
+
+@mixin control-wrapper {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  .headline {
+    flex: 1;
+    h1 {
+      margin: 0;
+    }
+  }
+  .controls {
+    font-style: normal;
+    display: flex;
+    flex-direction: row;
+    align-items: baseline;
+    margin-right: $MED_SPACE;
+  }
+}
+
+// -----colors
+$BLUE: #2582C8;
+$BLUE_MED: #0b5287;
+$BLUE_DARK: darken($BLUE_MED, 0.2);
+$BLUE_LIGHT: #7abce6;
+$BLUE_VERY_LIGHT: #d3efff;
+$GREEN_DARK: #385721;
+$GREEN: #81cf48;
+
+$GRAY_DARK: #2A3035;
+$GRAY: #8A8C8F;
+$GRAY_LIGHT: #ebeef2;
+$GRAY_JIRA: #F4F4F4;
+$ACCENT_ORANGE: #fc502d;
+$RED_ERROR: #9b0129;
+$DEEP_RED: #5c0000;
+
+$PURPLE: lighten(mix($BLUE_DARK, $DEEP_RED, 50), 15%);
+$ERROR_MAGENTA: $PURPLE;
+
+$BLACK: #000000;
+$WHITE: #FFFFFF;
+$GRAY_TRANS_75: rgba(0, 0, 0, 0.75);
+
+$C_HEADER_BG: $BLUE_DARK;
+$C_SUBHEAD_BG: lighten($BLUE_DARK, 3%);
+$C_HEADER_TEXT: $BLUE_VERY_LIGHT;
+
+$C_LEFTNAV_BG: $GRAY_DARK;
+$C_LEFTNAV_TEXT: $WHITE;
+$C_FORM_BG: lighten($BLUE_LIGHT, 10%);
+$C_FORM_TEXT: $BLUE_DARK;
+$C_FORM_BUTTON_BG: $WHITE;
+$C_FORM_BUTTON_TEXT: $BLUE_DARK;
+$C_ERROR_TEXT: $RED_ERROR;
+$C_TABLE_HEAD_RULE: $DEEP_RED;
+
+// ---fonts,style
+$GLOBAL_FONT_SIZE: 20px;
+$INPUT_FIELD_SCALE: 1.2;
+$GLOBAL_FONT_SIZE_SMALL: $RESPONSIVE_SMALL_SCALE * $GLOBAL_FONT_SIZE;
+$GLOBAL_FONT_SIZE_MEDIUM: $RESPONSIVE_SMALL_SCALE * $GLOBAL_FONT_SIZE;
+$BODY_FONT_FAMILY: "Helvetica Neue", Helvetica, Arial, sans-serif;
+$INPUT_FONT_FAMILY: $BODY_FONT_FAMILY;
+$HEADLINE_FONT_FAMILY: $BODY_FONT_FAMILY;
+
+$CONTENT_HEAD_FONT_SIZE: $GLOBAL_FONT_SIZE * 1.25;
+$CONTENT_HEAD_FONT_SIZE_SMALL: $GLOBAL_FONT_SIZE_SMALL * 1.25;
+
+$FORM_FONT_SIZE: $GLOBAL_FONT_SIZE * 0.8;
+$FORM_PADDING: 1rem;
+$FORM_PADDING_SMALL: $SMALL_SPACE;
+$FORM_RIGHT_MARGIN: $MED_SPACE;
+$FORM_RIGHT_MARGIN_SMALL: $SMALL_SPACE;
+$FORM_ERROR_MESSAGE: lighten($ERROR_MAGENTA, 25%);

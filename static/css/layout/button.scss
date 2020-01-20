@@ -1,0 +1,56 @@
+@import './../constants';
+
+$C_BUTTON_BG: $GRAY_JIRA;
+$C_BUTTON_TEXT: $BLUE_DARK;
+$C_BUTTON_MAIN_BG: $GREEN;
+$C_BUTTON_MAIN_OVER_BG: lighten($GREEN, 25%);
+$C_BUTTON_MAIN_TEXT: $BLACK;
+
+$C_BUTTON_CANCEL_BG: lighten($PURPLE, 50%);
+$C_BUTTON_CANCEL_OVER_BG: lighten($PURPLE, 60%);
+$C_BUTTON_CANCEL_TEXT: $BLACK;
+
+
+button {
+  -moz-appearance: none;
+  -webkit-appearance: none;
+  line-height: 100%;
+  padding: $MED_SMALL_SPACE $MED_SPACE;
+  border: none;
+  background: $C_BUTTON_BG;
+  color: $C_BUTTON_TEXT;
+  font-size: $GLOBAL_FONT_SIZE;
+  white-space: nowrap;
+  border-radius: $GLOBAL_FONT_SIZE;
+  outline: none !important;
+
+  &.button-icon {
+    background-color: white;
+  }
+
+  &.button-end-border {
+    border: 1px solid $GRAY;
+    border-left: none;
+    border-radius: 0;
+    border-top-right-radius: 8px !important;
+    border-bottom-right-radius: 8px !important;
+    margin-right: $MED_SMALL_SPACE;
+    margin-right: $MED_SMALL_SPACE;
+  }
+
+  &.main {
+    background-color: $C_BUTTON_MAIN_BG;
+    color: $C_BUTTON_MAIN_TEXT;
+    &:hover {
+      background-color: $C_BUTTON_MAIN_OVER_BG;
+    }
+  }
+
+  &.cancel {
+    background-color: $C_BUTTON_CANCEL_BG;
+    color: $C_BUTTON_CANCEL_TEXT;
+    &:hover {
+      background-color: $C_BUTTON_CANCEL_OVER_BG;
+    }
+  }
+}
