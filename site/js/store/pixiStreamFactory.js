@@ -29,12 +29,13 @@ export default ({ size }) => {
     }, true)
     .method('resizeApp', (store, { width, height }) => {
       const app = store.get('app');
-      store.set('width', width, 'height', height);
+      store.do.setWidth(width);
+      store.do.setHeight(height);
       if (app) {
         app.renderer.resize(width, height);
         store.emit('resized', { width, height });
       }
-    })
+    }, true)
     .property('x', 0, 'number')
     .property('y', 0, 'number')
     .property('ele', null)

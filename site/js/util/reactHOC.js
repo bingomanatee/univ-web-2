@@ -27,8 +27,8 @@ function toProps(stream) {
  *                     analyzes the property difference to deterine whether another state message should be issued.
  * @returns {PureComponent}
  */
-export const hoc = ({
-  View, stream, React: MyReact = null, streamToProps = toProps, ignoreProps = false, compareProps = null,
+export const hoc = (View, {
+  stream, React: MyReact = null, streamToProps = toProps, ignoreProps = false, compareProps = null,
 }) => class LGEComponent extends (MyReact || React).PureComponent {
   constructor(p) {
     super(p);
@@ -75,36 +75,48 @@ export const hoc = ({
  * @returns {{stream: *, componentWillUnmount: componentWillUnmount, state: *, componentDidMount: componentDidMount}}
  */
 export const injectLocalState = ({
-  streamFactory, stateFactory, initialProps = {}, target, mountedProp = 'isMounted', initialState = {},
+  streamFactory, stateFactory, initialProps = {}, target, mountedProp = '_isMounted', initialState = {},
 }) => {
   if (!stateFactory) {
-    stateFactory = ({ value }) => value;
+    stateFactory = ({ value }, props) => ({ ...props, ...value });
   }
 
   const stream = streamFactory(initialProps, target);
   const state = Object.assign(initialState, stateFactory(stream, initialProps));
 
-  const localCDM = (target.componentdDidMount) || (() => {});
-  const localCWU = (target.componentWillUnmount) || (() => {});
+  console.log('target CDM: ', target.componentDidMount.toString());
+  const localCDM = target.componentDidMount;
+  const localCWU = target.componentWillUnmount;
 
   const subName = `_sub_${Math.random()}`.replace('.', '_');
   const componentDidMount = function () {
-    target[subName] = stream.subscribe(
-      (stream) => {
-        if (target[mountedProp]) {
-          target.setState((stateFactory || toProps)(stream, target.props));
-        }
-      },
-      (error) => console.log('error on ', stream.name, error, 'in', target.name || 'React component'),
-    );
-    target[mountedProp] = true;
-    localCDM.call(target);
+    try {
+      target[mountedProp] = true;
+      target[subName] = stream.subscribe(
+        (stream) => {
+          if (target[mountedProp]) {
+            const newState = stateFactory(stream, target.props);
+            console.log('subscribe: newState = ', newState);
+            target.setState(newState);
+          }
+        },
+        (error) => console.log('error on ', stream.name, error, 'in', target.name || 'React component'),
+      );
+      if (localCDM) {
+        console.log('doing localCDM:', localCDM.toString());
+        localCDM.bind(target)()
+      } else {
+        console.log('no localCDM');
+      }
+    } catch (err) {
+      console.log('componentDidMount error: ', err);
+    }
   };
 
   const componentWillUnmount = function () {
     if (target[subName]) target[subName].unsubscribe();
     target[mountedProp] = false;
-    localCWU.call(target);
+    if (localCWU) localCWU.bind(target)();
   };
 
   return {
