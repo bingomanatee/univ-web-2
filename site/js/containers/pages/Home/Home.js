@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import styled from 'styled-components';
+import { Box, Button, Stack } from 'grommet';
 
 import homeStore from './home.store';
 import { injectLocalState } from '../../../util/reactHOC';
@@ -38,7 +39,18 @@ export default class Home extends Component {
   render() {
     console.log('home state: ', this.state);
     return (
-      <Main ref={this._ref} />
+      <Stack active={1}>
+        <Main ref={this._ref} />
+        <Box direction="column" fill>
+
+          <Box direction="row">
+            <Button primary plain={false} onClick={() => this.stream.do.move('x', 200)}>Left</Button>
+            <Button primary plain={false} onClick={() => this.stream.do.move('x', -200)}>Right</Button>
+            <Button primary plain={false} onClick={() => this.stream.do.move('y', -200)}>Up</Button>
+            <Button primary plain={false} onClick={() => this.stream.do.move('y', 200)}>Down</Button>
+          </Box>
+        </Box>
+      </Stack>
     );
   }
 }
