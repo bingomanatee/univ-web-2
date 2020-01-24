@@ -96,7 +96,6 @@ export const injectLocalState = ({
         (stream) => {
           if (target[mountedProp]) {
             const newState = stateFactory(stream, target.props);
-            console.log('subscribe: newState = ', newState);
             target.setState(newState);
           }
         },

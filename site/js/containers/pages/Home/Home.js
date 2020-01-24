@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import styled from 'styled-components';
 import { Box, Button, Stack } from 'grommet';
 
-import homeStore from './home.store';
+import homeStore from './home.store-diamond';
 import { injectLocalState } from '../../../util/reactHOC';
 
 const Main = styled.main`
@@ -31,13 +31,13 @@ export default class Home extends Component {
       || (prevProps.size.height !== this.props.size.height)
     ) {
       if (this.stream) {
+        console.log('----------------- resizing');
         this.stream.do.resizeApp(this.size);
       }
     }
   }
 
   render() {
-    console.log('home state: ', this.state);
     return (
       <Stack active={1}>
         <Main ref={this._ref} />
