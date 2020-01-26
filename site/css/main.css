@@ -1,19 +1,23 @@
-@import url(./lota-baker/lota-baker.css);
+@import './lota-baker/lota-baker.css';
 h1, h2, h3, h4, h5, h6 {
-  font-family: LotaGrotesque-Black, "Helvetica Neue", Helvetica, Arial, sans-serif; }
+  font-family: LotaGrotesque-Black, "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
 
 div, p {
-  font-family: "Lota Grotesque", "Helvetica Neue", Helvetica, Arial, sans-serif; }
+  font-family: "Lota Grotesque", "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
 
 .panel-label {
   border-bottom: 1px solid black;
   font-weight: bold;
   padding: 0;
   line-height: 150%;
-  text-align: center; }
+  text-align: center;
+}
 
 .line-height-100 {
-  line-height: 100% !important; }
+  line-height: 100% !important;
+}
 
 /*! HTML5 Boilerplate v7.2.0 | MIT License | https://html5boilerplate.com/ */
 /* main.css 2.0.0 | MIT License | https://github.com/h5bp/main.css#readme */
@@ -26,9 +30,16 @@ div, p {
    Base styles: opinionated defaults
    ========================================================================== */
 html {
-  color: #222;
+  color: black;
   font-size: 1em;
-  line-height: 1.4; }
+  line-height: 1.4;
+  background-color: black;
+}
+
+body {
+  color: black;
+  background-color: black;
+}
 
 /*
  * Remove text-shadow in selection highlight:
@@ -41,11 +52,13 @@ html {
  */
 ::-moz-selection {
   background: #b3d4fc;
-  text-shadow: none; }
+  text-shadow: none;
+}
 
 ::selection {
   background: #b3d4fc;
-  text-shadow: none; }
+  text-shadow: none;
+}
 
 /*
  * A better looking default horizontal rule
@@ -56,7 +69,8 @@ hr {
   border: 0;
   border-top: 1px solid #ccc;
   margin: 1em 0;
-  padding: 0; }
+  padding: 0;
+}
 
 /*
  * Remove the gap between audio, canvas, iframes,
@@ -69,7 +83,8 @@ iframe,
 img,
 svg,
 video {
-  vertical-align: middle; }
+  vertical-align: middle;
+}
 
 /*
  * Remove default fieldset styles.
@@ -77,13 +92,15 @@ video {
 fieldset {
   border: 0;
   margin: 0;
-  padding: 0; }
+  padding: 0;
+}
 
 /*
  * Allow only vertical resizing of textareas.
  */
 textarea {
-  resize: vertical; }
+  resize: vertical;
+}
 
 /* ==========================================================================
    Browser Upgrade Prompt
@@ -92,7 +109,8 @@ textarea {
   margin: 0.2em 0;
   background: #ccc;
   color: #000;
-  padding: 0.2em 0; }
+  padding: 0.2em 0;
+}
 
 /* ==========================================================================
    Author's custom styles
@@ -104,7 +122,8 @@ textarea {
  * Hide visually and from screen readers
  */
 .hidden {
-  display: none !important; }
+  display: none !important;
+}
 
 /*
 * Hide only visually, but have it available for screen readers:
@@ -124,7 +143,8 @@ textarea {
   position: absolute;
   white-space: nowrap;
   width: 1px;
-  /* 1 */ }
+  /* 1 */
+}
 
 /*
 * Extends the .sr-only class to allow the element
@@ -139,13 +159,15 @@ textarea {
   overflow: visible;
   position: static;
   white-space: inherit;
-  width: auto; }
+  width: auto;
+}
 
 /*
 * Hide visually and from screen readers, but maintain layout
 */
 .invisible {
-  visibility: hidden; }
+  visibility: hidden;
+}
 
 /*
 * Clearfix: contain floats
@@ -163,10 +185,12 @@ textarea {
   content: " ";
   /* 1 */
   display: table;
-  /* 2 */ }
+  /* 2 */
+}
 
 .clearfix:after {
-  clear: both; }
+  clear: both;
+}
 
 /* ==========================================================================
    EXAMPLE Media Queries for Responsive Design.
@@ -174,9 +198,11 @@ textarea {
    Modify as content requires.
    ========================================================================== */
 @media only screen and (min-width: 35em) {
-  /* Style adjustments for viewports that meet the condition */ }
+  /* Style adjustments for viewports that meet the condition */
+}
 @media print, (-webkit-min-device-pixel-ratio: 1.25), (min-resolution: 1.25dppx), (min-resolution: 120dpi) {
-  /* Style adjustments for high resolution devices */ }
+  /* Style adjustments for high resolution devices */
+}
 /* ==========================================================================
    Print styles.
    Inlined to avoid the additional HTTP request:
@@ -184,60 +210,72 @@ textarea {
    ========================================================================== */
 @media print {
   *,
-  *:before,
-  *:after {
+*:before,
+*:after {
     background: transparent !important;
     color: #000 !important;
     /* Black prints faster */
     -webkit-box-shadow: none !important;
     box-shadow: none !important;
-    text-shadow: none !important; }
+    text-shadow: none !important;
+  }
 
   a,
-  a:visited {
-    text-decoration: underline; }
+a:visited {
+    text-decoration: underline;
+  }
 
   a[href]:after {
-    content: " (" attr(href) ")"; }
+    content: " (" attr(href) ")";
+  }
 
   abbr[title]:after {
-    content: " (" attr(title) ")"; }
+    content: " (" attr(title) ")";
+  }
 
   /*
      * Don't show links that are fragment identifiers,
      * or use the `javascript:` pseudo protocol
      */
   a[href^="#"]:after,
-  a[href^="javascript:"]:after {
-    content: ""; }
+a[href^="javascript:"]:after {
+    content: "";
+  }
 
   pre {
-    white-space: pre-wrap !important; }
+    white-space: pre-wrap !important;
+  }
 
   pre,
-  blockquote {
+blockquote {
     border: 1px solid #999;
-    page-break-inside: avoid; }
+    page-break-inside: avoid;
+  }
 
   /*
      * Printing Tables:
      * https://web.archive.org/web/20180815150934/http://css-discuss.incutio.com/wiki/Printing_Tables
      */
   thead {
-    display: table-header-group; }
+    display: table-header-group;
+  }
 
   tr,
-  img {
-    page-break-inside: avoid; }
+img {
+    page-break-inside: avoid;
+  }
 
   p,
-  h2,
-  h3 {
+h2,
+h3 {
     orphans: 3;
-    widows: 3; }
+    widows: 3;
+  }
 
   h2,
-  h3 {
-    page-break-after: avoid; } }
+h3 {
+    page-break-after: avoid;
+  }
+}
 
 /*# sourceMappingURL=main.css.map */

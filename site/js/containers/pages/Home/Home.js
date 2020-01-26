@@ -4,11 +4,13 @@ import { Box, Button, Stack } from 'grommet';
 
 import homeStore from './home.store-diamond';
 import { injectLocalState } from '../../../util/reactHOC';
+import Controls from './ControlsUnified';
 
 const Main = styled.main`
     width: 100vw;
     height: 100vh;
     overflow: hidden;
+    background-color: black;
 `;
 
 export default class Home extends Component {
@@ -31,7 +33,6 @@ export default class Home extends Component {
       || (prevProps.size.height !== this.props.size.height)
     ) {
       if (this.stream) {
-        console.log('----------------- resizing');
         this.stream.do.resizeApp(this.size);
       }
     }
@@ -39,16 +40,15 @@ export default class Home extends Component {
 
   render() {
     return (
-      <Stack active={1}>
+      <Stack active={1} anchor="center">
         <Main ref={this._ref} />
-        <Box direction="column" fill>
-
-          <Box direction="row">
-            <Button primary plain={false} onClick={() => this.stream.do.move('x', 200)}>Left</Button>
-            <Button primary plain={false} onClick={() => this.stream.do.move('x', -200)}>Right</Button>
-            <Button primary plain={false} onClick={() => this.stream.do.move('y', -200)}>Up</Button>
-            <Button primary plain={false} onClick={() => this.stream.do.move('y', 200)}>Down</Button>
-          </Box>
+        <Box direction="column" fill height="20rem" align="center">
+          <Controls
+            arrows={this.stream.my.arrows}
+            onArrowOut={this.stream.do.onArrowOut}
+            onArrowOver={this.stream.do.onArrowOver}
+            onArrowDown={this.stream.do.onArrowDown}
+          />
         </Box>
       </Stack>
     );

@@ -4,6 +4,8 @@ import _N from '@wonderlandlabs/n';
 import * as PIXI from 'pixi.js';
 import is from 'is';
 
+const DIAMOND_DIV = 8;
+
 class HexDiamond {
   constructor(id, counts) {
     this.id = id;
@@ -30,9 +32,10 @@ class HexDiamond {
 
 proppify(HexDiamond)
   .addProp('id', '', 'string')
+  .addProp('visible', true, 'boolean')
   .addProp('counts', () => new Map());
 
-HexDiamond.indexOf = (x, y, div = 4) => {
+HexDiamond.indexOf = (x, y, div = DIAMOND_DIV) => {
   if (is.object(x)) {
     return HexDiamond.indexOf(x.x, x.y);
   }
