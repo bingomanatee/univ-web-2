@@ -99,9 +99,10 @@ export const injectLocalState = ({
             const newState = stateFactory(stream, target.props);
             const c = count;
             count += 1;
+            const time = Date.now();
             console.log(c, 'setting newState for ', stream.name, 'of', newState);
             target.setState(newState, () => {
-              console.log(c, 'done with update');
+              console.log(c, 'done with update', Date.now() - time);
             });
           }
         },

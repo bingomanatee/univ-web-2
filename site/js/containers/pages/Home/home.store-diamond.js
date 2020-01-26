@@ -209,6 +209,7 @@ export default ({ size }) => {
     .method('updateSpeed', (s, speed) => {
       s.do.setSpeed(speed);
       s.do.go();
+      s.broadcast();
     })
     .method('drawUniverse', (s) => {
       const time = Date.now();
