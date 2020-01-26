@@ -75,7 +75,7 @@ export const hoc = (View, {
  * @returns {{stream: *, componentWillUnmount: componentWillUnmount, state: *, componentDidMount: componentDidMount}}
  */
 export const injectLocalState = ({
-  streamFactory, stateFactory, initialProps = {}, target, mountedProp = '_isMounted', initialState = {},
+  streamFactory, stateFactory, initialProps = {}, target, mountedProp = '_isMounted', initialState = {}, filter = false,
 }) => {
   if (!stateFactory) {
     stateFactory = ({ value }, props) => ({ ...props, ...value });
@@ -83,27 +83,32 @@ export const injectLocalState = ({
 
   const stream = streamFactory(initialProps, target);
   const state = Object.assign(initialState, stateFactory(stream, initialProps));
+  const watchStream = filter ? stream.filtered(filter) : stream;
 
-  console.log('target CDM: ', target.componentDidMount.toString());
   const localCDM = target.componentDidMount;
   const localCWU = target.componentWillUnmount;
 
   const subName = `_sub_${Math.random()}`.replace('.', '_');
+  let count = 0;
   const componentDidMount = function () {
     try {
       target[mountedProp] = true;
-      target[subName] = stream.subscribe(
+      target[subName] = watchStream.subscribe(
         (stream) => {
           if (target[mountedProp]) {
             const newState = stateFactory(stream, target.props);
-            target.setState(newState);
+            const c = count;
+            count += 1;
+            console.log(c, 'setting newState for ', stream.name, 'of', newState);
+            target.setState(newState, () => {
+              console.log(c, 'done with update');
+            });
           }
         },
         (error) => console.log('error on ', stream.name, error, 'in', target.name || 'React component'),
       );
       if (localCDM) {
-        console.log('doing localCDM:', localCDM.toString());
-        localCDM.bind(target)()
+        localCDM.bind(target)();
       } else {
         console.log('no localCDM');
       }

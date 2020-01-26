@@ -17,7 +17,12 @@ export default class Home extends Component {
   constructor(p) {
     super(p);
     this._ref = React.createRef();
-    Object.assign(this, injectLocalState({ streamFactory: homeStore, initialProps: p, target: this }));
+    Object.assign(this, injectLocalState({
+      streamFactory: homeStore,
+      initialProps: p,
+      target: this,
+      filter: ['speed', 'direction', 'arrows'],
+    }));
   }
 
   componentDidMount() {
@@ -39,15 +44,19 @@ export default class Home extends Component {
   }
 
   render() {
+    console.log('rendering home with speed ', this.stream.my.speed);
     return (
       <Stack active={1} anchor="center">
         <Main ref={this._ref} />
         <Box direction="column" fill height="20rem" align="center">
           <Controls
-            arrows={this.stream.my.arrows}
+            arrows={this.state.arrows}
+            speed={this.state.speed}
             onArrowOut={this.stream.do.onArrowOut}
             onArrowOver={this.stream.do.onArrowOver}
             onArrowDown={this.stream.do.onArrowDown}
+            setSpeed={this.stream.do.updateSpeed}
+            stream={this.stream}
           />
         </Box>
       </Stack>

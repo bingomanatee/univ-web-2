@@ -12,7 +12,7 @@ import HexDiamond from './HexDiamond';
 import GalaxyCount from './GalaxyCount';
 import ControlArrow from './ControlArrow';
 
-const REFRESH_RATE = 200;
+const REFRESH_RATE = 100;
 const getU = ({ x, y }, range = 20) => `${apiRoot()}/uni/x0y0z0/${x},${y}?range=${range}`;
 
 const matrix = new Hexes({ scale: PX_PER_HEX, pointy: true });
@@ -74,9 +74,10 @@ export default ({ size }) => {
       COMPASS.forEach((ord, i) => {
         s.my.arrows.set(ord, new ControlArrow(ord, 180 - (i * 45)));
       });
+      s.do.onArrowDown('E');
     })
     .property('direction', 0, 'number')
-    .property('speed', 15, 'number')
+    .property('speed', 0, 'number')
     .method('cloneArrows', (s) => {
       const map = new Map();
       s.my.arrows.forEach((a, k) => {
@@ -118,9 +119,11 @@ export default ({ size }) => {
     })
     .method('go', (s) => {
       const time = Date.now();
-      s.do.drawUniverse();
-      s.do.compassMove();
-      requestAnimationFrame(throttledPoll);
+      if (s.my.speed > 0) {
+        s.do.drawUniverse();
+        s.do.compassMove();
+        requestAnimationFrame(throttledPoll);
+      }
       const elapsed = Date.now() - time;
       if (elapsed > REFRESH_RATE) {
         requestAnimationFrame(s.do.go);
@@ -183,7 +186,9 @@ export default ({ size }) => {
         if (s.my.universeData.has(key)) {
           counts.push(s.my.universeData.get(key));
         } else {
-          counts.push(new GalaxyCount({ x: hex.x, y: hex.y, g: 0 }));
+          const count = new GalaxyCount({ x: hex.x, y: hex.y, g: 0 });
+          s.my.universeData.set(key, count);
+          counts.push(count);
         }
       });
 
@@ -197,8 +202,13 @@ export default ({ size }) => {
       }
 
       const diamond = new HexDiamond(id, counts);
+      s.my.offsetAnchor.addChild(diamond.container);
       s.my.diamonds.set(id, diamond);
       return diamond;
+    })
+    .method('updateSpeed', (s, speed) => {
+      s.do.setSpeed(speed);
+      s.do.go();
     })
     .method('drawUniverse', (s) => {
       const time = Date.now();
@@ -227,8 +237,6 @@ export default ({ size }) => {
       const diamondGroups = _.groupBy(hexes, HexDiamond.indexOf);
       const visibleIds = Object.keys(diamondGroups);
 
-      const invisibleIds = _.difference(Array.from(s.my.diamonds.keys()), visibleIds);
-
       const deleted = 0;
 
       visibleIds.forEach((id) => {
@@ -246,26 +254,21 @@ export default ({ size }) => {
           return;
         }
         updatedCount = 1;
-        diamond.graphics.clear();
-        diamond.counts.forEach((count) => {
-          if (count.galaxies < 1) {
-            s.my.offsetAnchor.removeChild(diamond.graphics);
-            return;
-          }
-          count.drawHex(diamond.graphics);
-          count.addStars(diamond.graphics);
-          s.my.offsetAnchor.addChild(diamond.graphics);
-        });
+        diamond.draw();
       });
 
-      console.log('universeDrawn: ', updatedCount, 'diamonds updated', notUpdated, 'not updated', deleted, 'deleted');
-      console.log('draw time: ', Date.now() - time);
+    //  console.log('universeDrawn: ', updatedCount, 'diamonds updated', notUpdated, 'not updated', deleted, 'deleted');
+      // console.log('draw time: ', Date.now() - time);
     });
 
-  stream.on('initApp', pollUniverseData);
+  stream.on('initApp', (s) => {
+    pollUniverseData();
+    s.do.go();
+  });
 
-  stream.watch('direction', 'go');
-  stream.watch('speed', 'go');
+  stream.watch('speed', ({ value, prev }) => {
+    console.log('---- stream set to ', value, 'from', prev);
+  });
 
   stream.do.initArrows();
   return stream;

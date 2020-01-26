@@ -16,6 +16,11 @@ class GalaxyCount {
     this.galaxies = g;
   }
 
+  clone() {
+    const clone = new GalaxyCount({ x: this.hex.x, y: this.hex.y, g: this.galaxies }, this.matrix, this.depth);
+    return clone;
+  }
+
   get id() {
     return GalaxyCount.idFor(this);
   }
@@ -89,6 +94,16 @@ class GalaxyCount {
       .drawCircle(center.x, center.y, radius)
       .endFill();
   }
+
+  draw(graphics) {
+    graphics.cacheAsBitmap = false;
+    graphics.clear();
+    this.drawHex(graphics);
+    this.addStars(graphics);
+    this.drawn = this.galaxies;
+    graphics.cacheAsBitmap = true;
+    return graphics;
+  }
 }
 
 GalaxyCount.idFor = ({
@@ -127,6 +142,7 @@ GalaxyCount.galaxyColor = (n, hueVariation = 0, satVariation = 0, brightnessVari
 proppify(GalaxyCount)
   .addProp('hex', () => new CubeCoord(0, 0))
   .addProp('depth', 0, 'integer')
+  .addProp('drawn', 0, 'integer')
   .addProp('matrix', null)
   .addProp('galaxies', 0, 'integer');
 

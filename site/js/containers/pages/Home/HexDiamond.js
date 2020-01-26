@@ -17,22 +17,35 @@ class HexDiamond {
       if (this.counts.has(count.id) && (this.counts.get(count.id).sameCount(count))) {
         return;
       }
-      this.counts.set(count.id, count);
+      this.counts.set(count.id, count.clone());
       this.updated = true;
     });
   }
 
-  get graphics() {
-    if (!this._graphics) {
-      this._graphics = new PIXI.Graphics();
+  draw() {
+    this.counts.forEach((count) => {
+      if (count.galaxies !== count.drawn) {
+        count.draw(this.graphicsFor(count.id));
+      }
+    });
+    this.updated = true;
+  }
+
+  graphicsFor(id) {
+    if (this.container.getChildByName(id)) {
+      return this.container.getChildByName(id);
     }
-    return this._graphics;
+    const graphics = new PIXI.Graphics();
+    graphics.name = id;
+    this.container.addChild(graphics);
+    return graphics;
   }
 }
 
 proppify(HexDiamond)
   .addProp('id', '', 'string')
   .addProp('visible', true, 'boolean')
+  .addProp('container', () => new PIXI.Container())
   .addProp('counts', () => new Map());
 
 HexDiamond.indexOf = (x, y, div = DIAMOND_DIV) => {
