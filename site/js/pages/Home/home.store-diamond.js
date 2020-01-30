@@ -96,14 +96,12 @@ export default ({ size, history }) => {
       s.do.setArrows(map);
     })
     .method('onArrowOver', (s, ord) => {
-      console.log('over:', ord);
       s.my.arrows.forEach((a) => {
         a.over = (a.name === ord);
       });
       s.do.cloneArrows();
     })
     .method('onArrowOut', (s, ord) => {
-      console.log('out:', ord);
       s.my.arrows.forEach((a) => a.over = false);
       s.do.cloneArrows();
     })
@@ -120,7 +118,7 @@ export default ({ size, history }) => {
     .method('onMove', (s) => {
       pollUniverseData();
     })
-    .method('move', (s) => {
+    .method('updateCenter', (s) => {
       const x = _N(s.my.direction).cos(true).times(s.my.speed).times(SPEED_K).value;
       const y = _N(s.my.direction).sin(true).times(s.my.speed).times(SPEED_K).value;
 
@@ -130,23 +128,20 @@ export default ({ size, history }) => {
       if (s.my.offsetAnchor) {
         s.my.offsetAnchor.position = { x: s.my.offsetX, y: s.my.offsetY };
       }
-    })
+    }, true)
     .method('go', (s) => {
       const time = Date.now();
+      s.do.updateCenter();
       s.do.drawUniverse();
       s.do.drawCursor();
-      s.do.move();
-      requestAnimationFrame(throttledPoll);
+      throttledPoll();
       if (s.my.speed > 0) {
-        console.log('queueing next go');
         const elapsed = Date.now() - time;
         if (elapsed > REFRESH_RATE) {
           requestAnimationFrame(s.do.go);
         } else {
           setTimeout(stream.do.go, REFRESH_RATE - elapsed);
         }
-      } else {
-        console.log('go not queueing - stopped');
       }
     })
     .property('diamonds', new Map())
@@ -169,7 +164,6 @@ export default ({ size, history }) => {
     .property('cursorGraphics', null)
     .method('drawCursor', (s) => {
       s.do.initAnchor();
-      console.log('draw cursor');
       const center = matrix.nearestHex(-s.my.offsetX, -s.my.offsetY);
       if (center.isEqualTo(s.my.centerHex)) {
         return;
@@ -197,8 +191,6 @@ export default ({ size, history }) => {
         return;
       }
 
-      console.log('---------- initializing anchor for stream ', s.name, 'with app ', s.my.app);
-
       s.do.setAnchor(new PIXI.Container());
       s.my.app.stage.addChild(s.my.anchor);
 
@@ -208,7 +200,6 @@ export default ({ size, history }) => {
       s.do.setHexContainer(new PIXI.Container());
       s.my.offsetAnchor.addChild(s.my.hexContainer);
 
-      console.log('--- set cursor graphics');
       s.do.setCursorGraphics(new PIXI.Graphics());
       s.my.offsetAnchor.addChild(s.my.cursorGraphics);
 
@@ -319,12 +310,6 @@ export default ({ size, history }) => {
     //  console.log('universeDrawn: ', updatedCount, 'diamonds updated', notUpdated, 'not updated', deleted, 'deleted');
       // console.log('draw time: ', Date.now() - time);
     });
-
-  const throttledMove = _.throttle(() => stream.do.move(), 20);
-  const drawCursorThrottled = _.throttle(() => {
-    console.log('drawCursorThrottled');
-    stream.do.drawCursor();
-  }, 200);
 
   stream.do.initArrows();
 

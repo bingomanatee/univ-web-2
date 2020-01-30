@@ -11,11 +11,12 @@ import {
   LY_PER_PX, PX_PER_HEX, LY_PER_HEX, SUBSECTOR_DIV,
 } from '../../../util/constants';
 
-const BACKGROUND_FILL = chroma(25, 0, 40).num();
+const BACKGROUND_FILL = chroma(30, 0, 15).num();
+const BACKGROUND_FILL_EMPTY = chroma(20, 20, 20).num();
 const BACKGROUND_LINE = chroma(51, 102, 0).num();
 const SCANNER_COLOR = BACKGROUND_LINE;
 const SECTOR_COLOR = chroma(255, 225, 200).num();
-const SCANNER_ROTATION_SPEED = 3;
+const SCANNER_ROTATION_SPEED = 0.05;
 const SCANNER_ALPHA = 0.25;
 
 const divideUrl = (coord) => `https://univ-2019.appspot.com/uni/x0y0z0.x${coord.x}y${coord.y}z${coord.z}/_/divide`;
@@ -134,17 +135,19 @@ export default ({ size, galaxy, onClick }) => {
     .method('backRadius', (s) => _N(s.my.width).min(s.my.height).times(0.8).div(2)
       .round().value)
     .property('scanners', [], 'array')
+    .property('lastScanTime', 0, 'number')
     .method('scan', (s, init = false) => {
       if (s.my.stopped || (!s.my.scanContainer)) {
         return;
       }
       if (init) {
+        s.do.setLastScanTime(Date.now());
         s.my.scanContainer.removeChildren();
         const rad = s.do.backRadius();
         s.do.setScanners(_.range(2, SUBSECTOR_DIV, 2)
           .map((i) => {
             const c = new PIXI.Container();
-            c.angle = _.random(-20, 20);
+            c.angle = _.random(Math.max(-20, -200/ i), Math.min(20, 200/i));
             _.range(1, 10, 0.5)
               .forEach((r) => {
                 const g = new PIXI.Graphics();
@@ -163,7 +166,9 @@ export default ({ size, galaxy, onClick }) => {
           }));
       }
 
-      s.my.scanContainer.angle += SCANNER_ROTATION_SPEED;
+      const time = Date.now();
+      s.my.scanContainer.angle += SCANNER_ROTATION_SPEED * (time - s.my.lastScanTime);
+      s.do.setLastScanTime(time);
       s.emit('scanAngle', s.my.scanContainer.angle);
 
       requestAnimationFrame(() => s.do.scan());
@@ -208,7 +213,7 @@ export default ({ size, galaxy, onClick }) => {
 
       const rad = s.do.backRadius();
       s.my.backGraphic.clear()
-        .beginFill(BACKGROUND_FILL)
+        .beginFill(s.do.noSectors() ? BACKGROUND_FILL_EMPTY : BACKGROUND_FILL)
         .drawCircle(0, 0, rad)
         .endFill();
 
@@ -219,6 +224,11 @@ export default ({ size, galaxy, onClick }) => {
             .drawCircle(0, 0, subRad);
         });
 
+      s.do.drawDots();
+
+      s.do.scan(true);
+    })
+    .method('drawDots', (s) => {
       const matrix = s.do.sectorMatrix();
 
       let g = new PIXI.Graphics();
@@ -237,22 +247,57 @@ export default ({ size, galaxy, onClick }) => {
         }
       });
       s.my.backContainer.addChild(g);
-
-      s.do.scan(true);
     })
+    .property('sectorsLoaded', false, 'boolean')
+    .method('noSectors', (s) => !_.get(s, 'my.sectors.length'))
+    .method('checkSectors', (s) => {
+      console.log('checkSectors -----');
+      if (s.my.sectorsLoaded) {
+        if (s.do.noSectors()) {
+          console.log('fading');
+          s.do.setStopped(true);
+          s.do.fadeScanner(true);
+        } else {
+          console.log('we have galaxies');
+        }
+      } else {
+        console.log('checkSectors: sectors not loaded');
+      }
+    })
+    .property('fadeStart', 0, 'number')
+    .method('fadeScanner', (s, init = false) => {
+      if (init) {
+        s.do.setFadeStart(Date.now());
+        s.do.drawBackground();
+      }
+      const time = Date.now();
+
+      const elapsed = time - s.my.fadeStart;
+      if (elapsed > 2000) {
+        s.my.scanContainer.visible = false;
+      } else {
+        s.my.scanContainer.alpha = 1 - (elapsed / 2000);
+        requestAnimationFrame(() => s.do.fadeScanner());
+      }
+    })
+    .property('sectorsLoadError', null)
     .method('divide', (s) => {
       axios.get(divideUrl(s.my.galaxy))
         .then(({ data }) => {
           s.do.updateSectors(data);
+          s.do.setSectorsLoaded(true);
+          s.do.drawBackground();
         })
         .catch((err) => {
           console.log('error in getting data:', err);
+          s.do.setSectorsLoadError(err);
         });
     });
 
   stream.on('initApp', 'drawBackground');
   stream.on('resizeApp', 'drawSectors');
   stream.on('resizeApp', 'drawBackground');
+  stream.watch('sectorsLoaded', 'checkSectors');
   stream.on('resizeApp', (s) => {
     console.log('resizing app');
     stream.do.scan(true);
