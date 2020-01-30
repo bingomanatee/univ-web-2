@@ -1,17 +1,10 @@
 import React, { Component } from 'react';
-import styled from 'styled-components';
-import { Box, Button, Stack } from 'grommet';
+import { Box, Stack } from 'grommet';
 
 import homeStore from './home.store-diamond';
-import { injectLocalState } from '../../../util/reactHOC';
 import Controls from './ControlsUnified';
-
-const Main = styled.main`
-    width: 100vw;
-    height: 100vh;
-    overflow: hidden;
-    background-color: black;
-`;
+import Galaxy from './Galaxy/Galaxy';
+import { Main } from '../../views/Main';
 
 export default class Home extends Component {
   constructor(p) {
@@ -19,7 +12,7 @@ export default class Home extends Component {
     this._ref = React.createRef();
     this.stream = homeStore(p);
     /*    Object.assign(this, injectLocalState({
-      streamFactory: homeStore,
+      streamFactory: galaxyStore,
       initialProps: p,
       target: this,
       filter: ['speed', 'direction', 'arrows'],
@@ -41,6 +34,8 @@ export default class Home extends Component {
   }
 
   componentWillUnmount() {
+    this.stream.do.setSpeed(0);
+    this.stream.do.closeGalaxy();
     this._sub.unsubscribe();
   }
 
@@ -50,30 +45,31 @@ export default class Home extends Component {
       || (prevProps.size.height !== this.props.size.height)
     ) {
       if (this.stream) {
-        this.stream.do.resizeApp(this.size);
+        this.stream.do.resizeApp(this.props.size);
       }
     }
   }
 
   render() {
-    console.log('rendering home with speed ', this.stream.my.speed);
+    const {
+      galaxy, arrows, speed, centerHex,
+    } = this.state;
     return (
       <Stack active={1} anchor="center">
         <Main ref={this._ref} />
         <Box direction="column" fill height="20rem" align="center">
-          <Controls
-            arrows={this.state.arrows}
-            speed={this.state.speed}
-            onArrowOut={this.stream.do.onArrowOut}
-            onArrowOver={this.stream.do.onArrowOver}
-            onArrowDown={this.stream.do.onArrowDown}
-            setSpeed={(speed) => {
-              const t = Date.now();
-              this.stream.do.updateSpeed(speed);
-              console.log('dom setSpeed done in ', Date.now() - t);
-            }}
-            stream={this.stream}
-          />
+          {galaxy ? <Galaxy size={this.props.size} galaxy={galaxy} centerHex={centerHex} onClick={this.stream.do.closeGalaxy} /> : (
+            <Controls
+              arrows={arrows}
+              speed={speed}
+              onArrowOut={this.stream.do.onArrowOut}
+              onArrowOver={this.stream.do.onArrowOver}
+              onArrowDown={this.stream.do.onArrowDown}
+              setSpeed={this.stream.do.updateSpeed}
+              zoom={this.stream.do.zoom}
+              stream={this.stream}
+            />
+          )}
         </Box>
       </Stack>
     );

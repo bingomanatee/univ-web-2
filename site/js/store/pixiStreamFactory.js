@@ -1,6 +1,8 @@
 import { ValueStream } from '@wonderlandlabs/looking-glass-engine';
 import * as PIXI from 'pixi.js';
 import _ from 'lodash';
+import is from 'is';
+
 
 /**
  * this is a general portal that has a PIXI display element
@@ -24,16 +26,26 @@ export default ({ size }) => {
         ele.appendChild(app.view);
         store.do.resizeApp(iSize);
         store.do.setInitialized(true);
+        console.log('stream ', store.name, 'set app to ', app);
         store.emit('initApp');
       }
     }, true)
-    .method('resizeApp', (store, { width, height }) => {
-      const app = store.get('app');
-      store.do.setWidth(width);
-      store.do.setHeight(height);
+    .method('resizeApp', (s, size) => {
+      if (!(size && is.object(size))) {
+        console.log('resizeApp requires size as object', arguments);
+        return;
+      }
+
+      const { width, height } = size;
+      s.do.setWidth(width);
+      s.do.setHeight(height);
+
+
+      const app = s.get('app');
       if (app) {
+        console.log('resizing to ', size);
         app.renderer.resize(width, height);
-        store.emit('resized', { width, height });
+        s.emit('resized', { width, height });
       }
     }, true)
     .property('x', 0, 'number')

@@ -3,7 +3,7 @@ import {
 } from 'grommet';
 import React, { Component } from 'react';
 import betaStore from './beta.store';
-import PageFrame from '../../../views/PageFrame';
+import PageFrame from '../../views/PageFrame';
 
 export default class Beta extends Component {
   constructor(props) {

@@ -4,12 +4,26 @@ const ACTIVE_SPEED = '#C9A600';
 const TRANSPARENT = 'rgba(0,0,0,0)';
 
 class SvgControlsUnified extends PureComponent {
+  constructor(props) {
+    super(props);
+    this.state = { plusHover: false };
+
+    this.hover = this.hover.bind(this);
+    this.unHover = this.unHover.bind(this);
+  }
+
+  hover() {
+    this.setState({ plusHover: true });
+  }
+
+  unHover() {
+    this.setState({ plusHover: false });
+  }
+
   render() {
     const {
-      arrows, speed, setSpeed, onArrowOver, onArrowOut, onArrowDown,
+      arrows, speed, setSpeed, onArrowOver, onArrowOut, onArrowDown, zoom,
     } = this.props;
-
-    console.log('rendering controls');
 
     return (
       <svg width="400px" height="400px" viewBox="0 0 400 400">
@@ -23,8 +37,8 @@ class SvgControlsUnified extends PureComponent {
           fillRule="evenodd"
         >
           <path
-            d="M201.391919,85.391919 C264.904665,85.391919 316.391919,136.879173 316.391919,200.391919 C316.391919,263.904665 264.904665,315.391919 201.391919,315.391919 C137.879173,315.391919 86.391919,263.904665 86.391919,200.391919 C86.391919,136.879173 137.879173,85.391919 201.391919,85.391919 Z M200.891919,89.391919 C139.864454,89.391919 90.391919,138.864454 90.391919,199.891919 C90.391919,260.919384 139.864454,310.391919 200.891919,310.391919 C261.919384,310.391919 311.391919,260.919384 311.391919,199.891919 C311.391919,138.864454 261.919384,89.391919 200.891919,89.391919 Z"
-            id="ring"
+            d="M201.391919,85.391919 C264.904665,85.391919 316.391919,136.879173 316.391919,200.391919 C316.391919,263.904665 264.904665,315.391919 201.391919,315.391919 C137.879173,315.391919 86.391919,263.904665 86.391919,200.391919 C86.391919,136.879173 137.879173,85.391919 201.391919,85.391919 Z M200.891919,89.391919 C139.864454,89.391919 90.391919,138.864454 90.391919,199.891919 C90.391919,227.969872 100.864275,253.601876 118.116141,273.095083 L283.667697,273.095083 C300.919563,253.601876 311.391919,227.969872 311.391919,199.891919 C311.391919,138.864454 261.919384,89.391919 200.891919,89.391919 Z"
+            id="Combined-Shape"
             fill="#FFFFFF"
             opacity={0.2}
           />
@@ -211,6 +225,43 @@ class SvgControlsUnified extends PureComponent {
           >
             <circle id="speed-max" cx={14} cy={14} r={14} />
           </g>
+
+          <g id="zoom" transform="translate(112.756919, 273.095454)">
+            <rect
+              id="Rectangle"
+              fill={this.state.plusHover ? 'white' : 'black'}
+              x={73.2430808}
+              y={17.9045456}
+              width={34}
+              height={4}
+            />
+            <rect
+              id="Rectangle-Copy"
+              fill={this.state.plusHover ? 'white' : 'black'}
+              transform="translate(90.243081, 19.904546) rotate(90.000000) translate(-90.243081, -19.904546) "
+              x={73.2430808}
+              y={17.9045456}
+              width={34}
+              height={4}
+            />
+          </g>
+
+          <g
+            id="zoom"
+            transform="translate(112.756919, 273.095454)"
+            onMouseDown={zoom}
+            onMouseEnter={this.hover}
+            onMouseLeave={this.unHover}
+          >
+            <polygon
+              fillOpacity={0}
+              fill="#FFFFFF"
+              opacity={0}
+              points="176.401122 -7.08862345e-15 0 0 25.6197563 28.377175 81.6076973 43.6771225 104.43399 43.6771225 163.789231 21"
+            />
+          </g>
+
+
         </g>
       </svg>
     );

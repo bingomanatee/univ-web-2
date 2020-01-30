@@ -5,15 +5,18 @@ import chroma from 'chroma-js';
 import _ from 'lodash';
 import _N from '@wonderlandlabs/n';
 
-import pixiStreamFactory from '../../../store/pixiStreamFactory';
-import apiRoot from '../../../util/apiRoot';
-import { LY_PER_PX, PX_PER_HEX } from '../../../util/constants';
+import pixiStreamFactory from '../../store/pixiStreamFactory';
+import apiRoot from '../../util/apiRoot';
+import { LY_PER_PX, PX_PER_HEX } from '../../util/constants';
 import HexDiamond from './HexDiamond';
 import GalaxyCount from './GalaxyCount';
 import ControlArrow from './ControlArrow';
+import hexLine from '../../util/hexLine';
 
-const REFRESH_RATE = 100;
-const getU = ({ x, y }, range = 20) => `${apiRoot()}/uni/x0y0z0/${x},${y}?range=${range}`;
+const CURSOR_BORDER = chroma(255, 225, 200).num();
+const CURSOR_FILL = chroma(102, 204, 0).num();
+const REFRESH_RATE = 200;
+const SPEED_K = 5;
 
 const matrix = new Hexes({ scale: PX_PER_HEX, pointy: true });
 
@@ -21,7 +24,7 @@ const COMPASS = 'E,NE,N,NW,W,SW,S,SE'.split(',');
 
 let worker;
 if (typeof Worker !== 'undefined') {
-  worker = new Worker('../../../univPoller.js');
+  worker = new Worker('../../univPoller.js');
 
 
   worker.postMessage({
@@ -34,7 +37,7 @@ if (typeof Worker !== 'undefined') {
 
 /* ---------------- FACTORY ----------------- */
 
-export default ({ size }) => {
+export default ({ size, history }) => {
   const stream = pixiStreamFactory({ size });
 
   function pollUniverseData() {
@@ -51,7 +54,6 @@ export default ({ size }) => {
       console.log('pollUniverseData: no worker');
     }
   }
-
   const throttledPoll = _.throttle(pollUniverseData, 500);
 
   worker.onmessage = (message) => {
@@ -69,6 +71,14 @@ export default ({ size }) => {
   };
 
   stream
+    .property('galaxy', null)
+    .method('zoom', (s) => {
+      s.do.setSpeed(0);
+      s.do.setGalaxy(s.my.centerHex);
+    }, true)
+    .method('closeGalaxy', (s) => {
+      s.do.setGalaxy(null);
+    })
     .property('arrows', new Map())
     .method('initArrows', (s) => {
       COMPASS.forEach((ord, i) => {
@@ -103,32 +113,40 @@ export default ({ size }) => {
       });
       s.do.cloneArrows();
       s.do.setDirection(s.my.arrows.get(ord).angle);
+      if (s.my.speed === 0) s.do.setSpeed(2);
+      s.do.go();
     })
     .property('universeData', new Map())
     .method('onMove', (s) => {
       pollUniverseData();
     })
-    .method('compassMove', (s) => {
-      const x = _N(s.my.direction).cos(true).times(s.my.speed).value;
-      const y = _N(s.my.direction).sin(true).times(s.my.speed).value;
+    .method('move', (s) => {
+      const x = _N(s.my.direction).cos(true).times(s.my.speed).times(SPEED_K).value;
+      const y = _N(s.my.direction).sin(true).times(s.my.speed).times(SPEED_K).value;
 
       s.do.setOffsetX(s.my.offsetX + x);
       s.do.setOffsetY(s.my.offsetY + y);
 
-      s.my.offsetAnchor.position = { x: s.my.offsetX, y: s.my.offsetY };
+      if (s.my.offsetAnchor) {
+        s.my.offsetAnchor.position = { x: s.my.offsetX, y: s.my.offsetY };
+      }
     })
     .method('go', (s) => {
       const time = Date.now();
+      s.do.drawUniverse();
+      s.do.drawCursor();
+      s.do.move();
+      requestAnimationFrame(throttledPoll);
       if (s.my.speed > 0) {
-        s.do.drawUniverse();
-        s.do.compassMove();
-        requestAnimationFrame(throttledPoll);
-      }
-      const elapsed = Date.now() - time;
-      if (elapsed > REFRESH_RATE) {
-        requestAnimationFrame(s.do.go);
+        console.log('queueing next go');
+        const elapsed = Date.now() - time;
+        if (elapsed > REFRESH_RATE) {
+          requestAnimationFrame(s.do.go);
+        } else {
+          setTimeout(stream.do.go, REFRESH_RATE - elapsed);
+        }
       } else {
-        setTimeout(stream.do.go, REFRESH_RATE - elapsed);
+        console.log('go not queueing - stopped');
       }
     })
     .property('diamonds', new Map())
@@ -145,20 +163,59 @@ export default ({ size }) => {
       s.broadcast('universeData');
     })
     .property('anchor', null)
-    .method('initAnchor', (s) => {
-      if (s.my.anchor) {
+    .property('offsetAnchor', null)
+    .property('hexContainer', null)
+    .property('centerHex', null)
+    .property('cursorGraphics', null)
+    .method('drawCursor', (s) => {
+      s.do.initAnchor();
+      console.log('draw cursor');
+      const center = matrix.nearestHex(-s.my.offsetX, -s.my.offsetY);
+      if (center.isEqualTo(s.my.centerHex)) {
         return;
       }
-      const group = new PIXI.Container();
-      s.my.app.stage.addChild(group);
-      s.do.setAnchor(group);
-      s.do.setAnchorPos();
-      const offsetAnchor = new PIXI.Container();
-      group.addChild(offsetAnchor);
-      s.do.setOffsetAnchor(offsetAnchor);
+
+      s.do.setCenterHex(center);
+
+      s.my.cursorGraphics.clear()
+        .beginFill(CURSOR_FILL, 0.1);
+      hexLine(s.my.cursorGraphics, center, matrix);
+      s.my.cursorGraphics.endFill();
+
+      center.neighbors.forEach((neighbor) => {
+        s.my.cursorGraphics
+          .lineStyle({ width: 2, color: CURSOR_BORDER, native: true });
+        hexLine(s.my.cursorGraphics, neighbor, matrix);
+      });
+
+      s.my.cursorGraphics
+        .lineStyle({ width: 4, color: CURSOR_BORDER, native: false });
+      hexLine(s.my.cursorGraphics, center, matrix);
     })
-    .property('offsetAnchor', null)
+    .method('initAnchor', (s) => {
+      if (s.my.anchor || (!s.my.app)) {
+        return;
+      }
+
+      console.log('---------- initializing anchor for stream ', s.name, 'with app ', s.my.app);
+
+      s.do.setAnchor(new PIXI.Container());
+      s.my.app.stage.addChild(s.my.anchor);
+
+      s.do.setOffsetAnchor(new PIXI.Container());
+      s.my.anchor.addChild(s.my.offsetAnchor);
+
+      s.do.setHexContainer(new PIXI.Container());
+      s.my.offsetAnchor.addChild(s.my.hexContainer);
+
+      console.log('--- set cursor graphics');
+      s.do.setCursorGraphics(new PIXI.Graphics());
+      s.my.offsetAnchor.addChild(s.my.cursorGraphics);
+
+      s.do.setAnchorPos();
+    })
     .method('setAnchorPos', (s) => {
+      if (!s.my.anchor) return;
       const x = s.my.width / 2 || 0;
       const y = s.my.height / 2 || 0;
       s.my.anchor.position = { x, y };
@@ -173,7 +230,9 @@ export default ({ size }) => {
           break;
       }
 
-      s.my.offsetAnchor.position = { x: s.my.offsetX, y: s.my.offsetY };
+      if (s.my.offsetAnchor) {
+        s.my.offsetAnchor.position = { x: s.my.offsetX, y: s.my.offsetY };
+      }
       pollUniverseData();
     }, true)
     .property('offsetX', 0, 'number')
@@ -195,6 +254,7 @@ export default ({ size }) => {
       return counts;
     })
     .method('updateDiamond', (s, id, counts) => {
+      if (!s.my.hexContainer) return null;
       const existing = s.my.diamonds.get(id);
       if (existing) {
         existing.updateCounts(counts);
@@ -202,7 +262,7 @@ export default ({ size }) => {
       }
 
       const diamond = new HexDiamond(id, counts);
-      s.my.offsetAnchor.addChild(diamond.container);
+      s.my.hexContainer.addChild(diamond.container);
       s.my.diamonds.set(id, diamond);
       return diamond;
     })
@@ -212,13 +272,11 @@ export default ({ size }) => {
       s.broadcast();
     })
     .method('drawUniverse', (s) => {
-      const time = Date.now();
       if (!s.my.app) {
         return;
       }
-      if (!s.my.anchor) {
-        s.do.initAnchor();
-      }
+      const time = Date.now();
+      s.do.initAnchor();
 
       const x = -s.my.offsetX;
       const y = -s.my.offsetY;
@@ -262,15 +320,24 @@ export default ({ size }) => {
       // console.log('draw time: ', Date.now() - time);
     });
 
-  stream.on('initApp', (s) => {
-    pollUniverseData();
-    s.do.go();
-  });
-
-  stream.watch('speed', ({ value, prev }) => {
-    console.log('---- stream set to ', value, 'from', prev);
-  });
+  const throttledMove = _.throttle(() => stream.do.move(), 20);
+  const drawCursorThrottled = _.throttle(() => {
+    console.log('drawCursorThrottled');
+    stream.do.drawCursor();
+  }, 200);
 
   stream.do.initArrows();
+
+  stream.on('initApp', pollUniverseData);
+  stream.on('initApp', 'initAnchor');
+  stream.on('initApp', 'drawCursor');
+  stream.on('initApp', 'go');
+
+  stream.watch('speed', 'go');
+
+  stream.on('resized', 'setAnchorPos');
+  stream.on('resized', 'drawCursor');
+  stream.on('resized', 'drawUniverse');
+
   return stream;
 };

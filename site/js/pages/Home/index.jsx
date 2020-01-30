@@ -1,8 +1,8 @@
 import React from 'react';
 import { withSize } from 'react-sizeme';
-import { hoc } from '../../../util/reactHOC';
+import { hoc } from '../../util/reactHOC';
 import Home from './Home';
-import siteStore from '../../../store/site.store';
+import siteStore from '../../store/site.store';
 
 export default withSize({
   monitorHeight: true,

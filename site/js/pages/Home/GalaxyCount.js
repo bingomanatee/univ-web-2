@@ -88,11 +88,15 @@ class GalaxyCount {
       return p.clone().lerp(a, Math.random());
     }, null);
 
-    const radius = _.random(0.5, 2, true);
-    const opacity = 1 / _.random(0, radius);
-    graphics.beginFill(GalaxyCount.galaxyColor(n, 50, 0.8, 0.4), opacity)
-      .drawCircle(center.x, center.y, radius)
-      .endFill();
+    const radius = _.random(0.5, 1, true);
+    const opacity = 0.5 / _.random(0.25, 1) ;
+    const color = GalaxyCount.galaxyColor(n, 50, 0.8, 0.4);
+
+    [1].forEach((offset) => {
+      graphics.beginFill(color, opacity / offset ** 2)
+        .drawCircle(center.x, center.y, radius + offset)
+        .endFill();
+    });
   }
 
   draw(graphics) {

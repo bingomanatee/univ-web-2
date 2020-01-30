@@ -10,7 +10,7 @@ import MainGrid from './MainGrid';
 
 // pages
 
-import Home from '../pages/Home';
+import Home from '../../pages/Home';
 import theme from '../../theme';
 
 export default class Main extends PureComponent {
@@ -21,6 +21,7 @@ export default class Main extends PureComponent {
           <Content>
             <Switch>
               <Route path="/" exact component={Home} />
+              <Route path="/galaxy/:galaxy" exact component={Home} />
               <Route component={Home} />
             </Switch>
           </Content>
