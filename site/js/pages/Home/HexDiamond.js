@@ -23,11 +23,16 @@ class HexDiamond {
   }
 
   draw() {
+    let countStars = [];
     this.counts.forEach((count) => {
       if (count.galaxies !== count.drawn) {
-        count.draw(this.graphicsFor(count.id));
+        const stars = count.draw(this.graphicsFor(count.id));
+        if (stars) {
+          countStars = [...countStars, ...stars];
+        }
       }
     });
+    countStars.forEach((star) => this.container.addChild(star));
     this.updated = true;
   }
 

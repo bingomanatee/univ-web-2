@@ -2,11 +2,12 @@ import { proppify } from '@wonderlandlabs/propper';
 import { CubeCoord } from '@wonderlandlabs/hexagony';
 import _ from 'lodash';
 import _N from '@wonderlandlabs/n';
-/* import * as PIXI from 'pixi.js';
-*/
+import * as PIXI from 'pixi.js';
 import is from 'is';
 import { Cube } from 'grommet-icons';
 import chroma from 'chroma-js';
+
+import siteStore from '../../store/site.store';
 
 class GalaxyCount {
   constructor({ x, y, g }, matrix, depth = 0) {
@@ -72,9 +73,7 @@ class GalaxyCount {
   }
 
   addStars(graphics) {
-    _.range(0, this.galaxies).forEach((n) => {
-      this.addStar(graphics, n);
-    });
+    return _.range(0, Math.sqrt(2 * this.galaxies)).map((n) => this.addStar(graphics, n));
   }
 
   addStar(graphics, n) {
@@ -84,29 +83,40 @@ class GalaxyCount {
       .value();
 
     const center = referencePoints.reduce((p, a) => {
-      if (!p) return a;
+      if (!p) {
+        return a;
+      }
       return p.clone().lerp(a, Math.random());
     }, null);
 
-    const radius = _.random(0.5, 1, true);
-    const opacity = 0.5 / _.random(0.25, 1) ;
+    const opacity = 0.5 / _.random(0.25, 1);
     const color = GalaxyCount.galaxyColor(n, 50, 0.8, 0.4);
+    const radius = _.random(0.5, 1, true);
+    if (siteStore.my.galaxySheet) {
+      const sprite = siteStore.do.randomSprite();
+      sprite.x = center.x;
+      sprite.y = center.y;
+      sprite.scale = { x: radius / 10, y: radius / 10 };
+     // sprite.tint = color;
+      sprite.alpha = opacity;
+      return sprite;
+    }
 
-    [1].forEach((offset) => {
-      graphics.beginFill(color, opacity / offset ** 2)
-        .drawCircle(center.x, center.y, radius + offset)
-        .endFill();
-    });
+    graphics.beginFill(color, opacity)
+      .drawCircle(center.x, center.y, radius)
+      .endFill();
+
+    return false;
   }
 
   draw(graphics) {
     graphics.cacheAsBitmap = false;
+    this.drawn = this.galaxies;
     graphics.clear();
     this.drawHex(graphics);
-    this.addStars(graphics);
-    this.drawn = this.galaxies;
+    const out = this.addStars(graphics);
     graphics.cacheAsBitmap = true;
-    return graphics;
+    return out;
   }
 }
 
@@ -121,7 +131,9 @@ GalaxyCount.idFor = ({
     });
   }
 
-  if (!depth) return hex.toString();
+  if (!depth) {
+    return hex.toString();
+  }
   return `${hex.toString()}:${depth}`;
 };
 

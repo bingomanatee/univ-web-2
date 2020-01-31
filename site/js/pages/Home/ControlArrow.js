@@ -25,7 +25,7 @@ class ControlArrow {
   }
 
   get opacity() {
-    return (this.active || this.over) ? 1 : 0.4;
+    return (this.active || this.over) ? 1 : 0.8;
   }
 
   clone() {

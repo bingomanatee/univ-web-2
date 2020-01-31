@@ -10,6 +10,7 @@ import apiRoot from '../../../util/apiRoot';
 import {
   LY_PER_PX, PX_PER_HEX, LY_PER_HEX, SUBSECTOR_DIV,
 } from '../../../util/constants';
+import siteStore from '../../../store/site.store';
 
 const BACKGROUND_FILL = chroma(30, 0, 15).num();
 const BACKGROUND_FILL_EMPTY = chroma(20, 20, 20).num();
@@ -48,74 +49,89 @@ export default ({ size, galaxy, onClick }) => {
     .method('drawSectors', (s) => {
       s.my.sectorContainer.removeChildren();
       const matrix = s.do.sectorMatrix();
+
       s.my.sectors.forEach((sector) => {
-        const g = new PIXI.Graphics();
-        sector.graphics = g;
         const coord = new CubeCoord(sector.x, sector.y);
         const xy = coord.toXY(matrix);
-        g.position = xy;
 
-        let radialPoints = _(_.range(0, 360, 15))
-          .map((a) => {
-            const n = _N(a);
-            return {
-              x: n.sin(true).times(matrix.scale).div(3).value,
-              y: n.cos(true).times(matrix.scale).div(3).value,
-            };
-          })
-          .value();
+        if (siteStore.my.galaxySheet) {
+          const sprite = siteStore.do.randomSprite();
+          s.my.sectorContainer.addChild(sprite);
+          const scale = matrix.scale / 80;
+          sprite.scale.x = scale;
+          sprite.scale.y = scale;
+          sprite.x = xy.x;
+          sprite.y = xy.y;
+          sector.graphics = sprite;
 
-        radialPoints.forEach((p, i) => {
-          const a = i ? radialPoints[i - 1] : _.last(radialPoints);
-          const b = radialPoints[i + 1] || _.first(radialPoints);
+          s.my.sectorContainer.addChild(sprite);
+        } else {
+          const g = new PIXI.Graphics();
+          sector.graphics = g;
+          g.position = xy;
 
-          p.x = (p.x * 2 + a.x + b.x) / 4;
-          p.y = (p.y + 2 * a.y + b.y) / 4;
-        });
+          let radialPoints = _(_.range(0, 360, 15))
+            .map((a) => {
+              const n = _N(a);
+              return {
+                x: n.sin(true).times(matrix.scale).div(3).value,
+                y: n.cos(true).times(matrix.scale).div(3).value,
+              };
+            })
+            .value();
 
-        g.beginFill(SECTOR_COLOR, 0.33);
+          radialPoints.forEach((p, i) => {
+            const a = i ? radialPoints[i - 1] : _.last(radialPoints);
+            const b = radialPoints[i + 1] || _.first(radialPoints);
 
-        radialPoints.forEach(({ x, y }, i) => {
-          if (!i) {
-            g.moveTo(x, y);
-          } else {
-            g.lineTo(x, y);
-          }
-        });
+            p.x = (p.x * 2 + a.x + b.x) / 4;
+            p.y = (p.y + 2 * a.y + b.y) / 4;
+          });
 
-        g.endFill();
+          g.beginFill(SECTOR_COLOR, 0.33);
 
-        const split = _.random(0, radialPoints.length);
-        radialPoints = radialPoints.slice(split).concat(radialPoints.slice(0, split));
+          radialPoints.forEach(({ x, y }, i) => {
+            if (!i) {
+              g.moveTo(x, y);
+            } else {
+              g.lineTo(x, y);
+            }
+          });
 
-        g.beginFill(SECTOR_COLOR, 0.33);
+          g.endFill();
 
-        radialPoints.forEach(({ x, y }, i) => {
-          if (!i) {
-            g.moveTo(x * 1.5, y * 1.5);
-          } else {
-            g.lineTo(x * 1.5, y * 1.5);
-          }
-        });
+          const split = _.random(0, radialPoints.length);
+          radialPoints = radialPoints.slice(split).concat(radialPoints.slice(0, split));
 
-        g.endFill();
+          g.beginFill(SECTOR_COLOR, 0.33);
 
-        const split2 = _.random(0, radialPoints.length);
-        radialPoints = radialPoints.slice(split2).concat(radialPoints.slice(0, split2));
+          radialPoints.forEach(({ x, y }, i) => {
+            if (!i) {
+              g.moveTo(x * 1.5, y * 1.5);
+            } else {
+              g.lineTo(x * 1.5, y * 1.5);
+            }
+          });
 
-        g.beginFill(SECTOR_COLOR, 0.25);
+          g.endFill();
 
-        radialPoints.forEach(({ x, y }, i) => {
-          if (!i) {
-            g.moveTo(x * 2.5, y * 2.5);
-          } else {
-            g.lineTo(x * 2.5, y * 2.5);
-          }
-        });
+          const split2 = _.random(0, radialPoints.length);
+          radialPoints = radialPoints.slice(split2).concat(radialPoints.slice(0, split2));
 
-        g.endFill();
+          g.beginFill(SECTOR_COLOR, 0.25);
 
-        s.my.sectorContainer.addChild(g);
+          radialPoints.forEach(({ x, y }, i) => {
+            if (!i) {
+              g.moveTo(x * 2.5, y * 2.5);
+            } else {
+              g.lineTo(x * 2.5, y * 2.5);
+            }
+          });
+
+          g.endFill();
+
+          s.my.sectorContainer.addChild(g);
+        }
       });
     })
     .method('sizeSectors', (s, angle) => {
@@ -147,7 +163,7 @@ export default ({ size, galaxy, onClick }) => {
         s.do.setScanners(_.range(2, SUBSECTOR_DIV, 2)
           .map((i) => {
             const c = new PIXI.Container();
-            c.angle = _.random(Math.max(-20, -200/ i), Math.min(20, 200/i));
+            c.angle = _.random(Math.max(-20, -200 / i), Math.min(20, 200 / i));
             _.range(1, 10, 0.5)
               .forEach((r) => {
                 const g = new PIXI.Graphics();
