@@ -13,6 +13,9 @@ import {
 import siteStore from '../../../store/site.store';
 
 const BACKGROUND_FILL = chroma(30, 0, 15).num();
+const WHITE = chroma(255, 255, 255).num();
+const REF_DOTS = chroma(0, 0, 0).num();
+const BACKGROUND_MARGIN = chroma(0, 0, 0).num();
 const BACKGROUND_FILL_EMPTY = chroma(20, 20, 20).num();
 const BACKGROUND_LINE = chroma(51, 102, 0).num();
 const SCANNER_COLOR = BACKGROUND_LINE;
@@ -35,6 +38,10 @@ export default ({ size, galaxy, onClick }) => {
   stream.name = 'galaxyStore';
 
   stream.property('galaxy', galaxy)
+    .property('chosenGalaxy', false)
+    .method('chooseGalaxy', (s, sector) => {
+      s.do.setChosenGalaxy(sector);
+    })
     .property('sectors', [], 'array')
     .property('sectorContainer', null)
     .method('updateSectors', (s, sectors) => {
@@ -48,6 +55,7 @@ export default ({ size, galaxy, onClick }) => {
     })
     .method('drawSectors', (s) => {
       s.my.sectorContainer.removeChildren();
+      if (s.my.chosenGalaxy) return;
       const matrix = s.do.sectorMatrix();
 
       s.my.sectors.forEach((sector) => {
@@ -56,10 +64,13 @@ export default ({ size, galaxy, onClick }) => {
 
         if (siteStore.my.galaxySheet) {
           const sprite = siteStore.do.randomSprite();
+          sprite.interactive = true;
+          sprite.on('click', (e) => s.do.chooseGalaxy(sector));
+          sprite.buttonMode = true;
+
           s.my.sectorContainer.addChild(sprite);
-          const scale = matrix.scale / 80;
-          sprite.scale.x = scale;
-          sprite.scale.y = scale;
+          const scale = matrix.scale / _.random(40, 120);
+          sprite.scale = { x: scale, y: scale };
           sprite.x = xy.x;
           sprite.y = xy.y;
           sector.graphics = sprite;
@@ -69,6 +80,9 @@ export default ({ size, galaxy, onClick }) => {
           const g = new PIXI.Graphics();
           sector.graphics = g;
           g.position = xy;
+
+          g.interactive = true;
+          g.on('click', (e) => s.do.chooseGalaxy(sector));
 
           let radialPoints = _(_.range(0, 360, 15))
             .map((a) => {
@@ -133,6 +147,12 @@ export default ({ size, galaxy, onClick }) => {
           s.my.sectorContainer.addChild(g);
         }
       });
+    })
+    .method('pickGalaxy', (s, cx, cy) => {
+      const distance = ({ x, y }) => Math.sqrt((x - cx) ** 2 + (y - cy) ** 2);
+    })
+    .method('drawStars', (s) => {
+
     })
     .method('sizeSectors', (s, angle) => {
       const matrix = s.do.sectorMatrix();
@@ -213,6 +233,7 @@ export default ({ size, galaxy, onClick }) => {
       s.my.anchor.addChild(s.my.sectorContainer);
       s.my.app.stage.addChild(s.my.anchor);
       s.do.centerAnchor();
+      s.do.listenToClicks();
     })
     .method('close', (s) => {
       s.do.setStopped(true);
@@ -229,6 +250,9 @@ export default ({ size, galaxy, onClick }) => {
 
       const rad = s.do.backRadius();
       s.my.backGraphic.clear()
+        .beginFill(BACKGROUND_MARGIN)
+        .drawCircle(0, 0, rad * 1.1)
+        .endFill()
         .beginFill(s.do.noSectors() ? BACKGROUND_FILL_EMPTY : BACKGROUND_FILL)
         .drawCircle(0, 0, rad)
         .endFill();
@@ -254,8 +278,8 @@ export default ({ size, galaxy, onClick }) => {
           return;
         }
         const xy = sub.coord.toXY(matrix);
-        g.beginFill(BACKGROUND_LINE, 0.5)
-          .drawCircle(xy.x, xy.y, 1)
+        g.beginFill(REF_DOTS)
+          .drawCircle(xy.x, xy.y, 3)
           .endFill();
         if (++count > 50) {
           s.my.backContainer.addChild(g);
@@ -297,6 +321,37 @@ export default ({ size, galaxy, onClick }) => {
       }
     })
     .property('sectorsLoadError', null)
+    .method('listenToClicks', (s) => {
+      s.my.sectorContainer.interactiveChildren = true;
+      s.my.app.stage.interactiveChildren = true;
+      /*      console.log('----listenToClicks');
+      s.my.backGraphic.interactive = true;
+      s.my.backGraphic.buttonMode = true;
+      s.my.backGraphic.on('pointerdown', (e) => {
+        console.log('background  --- pointerdown:', e);
+      }); */
+    })
+    .method('drawReferenceGrid', (s) => {
+      console.log('drawReferenceGrid started');
+      try {
+        const rg = new PIXI.Graphics();
+
+        s.my.app.stage.addChild(rg);
+        _.range(0, s.my.width, 100).forEach((x) => {
+          rg.lineStyle(1, WHITE)
+            .moveTo(x, 0)
+            .lineTo(x, s.my.height);
+        });
+        _.range(0, s.my.height, 100).forEach((y) => {
+          rg.lineStyle(1, WHITE)
+            .moveTo(0, y)
+            .lineTo(s.my.width, y);
+        });
+      } catch (err) {
+        console.log('error in drg: ', err);
+      }
+      console.log('drawReferenceGrid ended');
+    })
     .method('divide', (s) => {
       axios.get(divideUrl(s.my.galaxy))
         .then(({ data }) => {
@@ -310,7 +365,11 @@ export default ({ size, galaxy, onClick }) => {
         });
     });
 
-  stream.on('initApp', 'drawBackground');
+  stream.on('initApp', (s) => {
+    s.do.drawReferenceGrid();
+    s.do.drawBackground();
+  });
+  // stream.on('initApp', 'drawReferenceGrid');
   stream.on('resizeApp', 'drawSectors');
   stream.on('resizeApp', 'drawBackground');
   stream.watch('sectorsLoaded', 'checkSectors');

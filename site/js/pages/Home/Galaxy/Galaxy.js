@@ -10,6 +10,24 @@ const ButtonWrapper = styled.div`
 position: absolute;
 left: 0;
 top: 0;
+width: 200px;
+height: 200px;
+`;
+
+const Frame = styled.section`
+width: 100%;
+height: 100%;
+position: relative;
+`;
+
+const FrameItem = styled.div`
+position: absolute;
+width: 100%;
+height: 100%;
+display: flex;
+flex-direction: row;
+align-content: center;
+align-items: center;
 `;
 
 export default class Galaxy extends Component {
@@ -51,14 +69,14 @@ export default class Galaxy extends Component {
 
   render() {
     return (
-      <Stack active={1} anchor="center" fill id="galaxy-stack">
-        <Main transparent>
+      <Frame active={1} anchor="center" fill id="galaxy-stack">
+        <FrameItem>
           <Main transparent ref={this._ref} />
-          <ButtonWrapper>
-            <SvgOut onClick={this.stream.do.close} />
-          </ButtonWrapper>
-        </Main>
-      </Stack>
+        </FrameItem>
+        <ButtonWrapper>
+          <SvgOut onClick={this.stream.do.close} />
+        </ButtonWrapper>
+      </Frame>
     );
   }
 }

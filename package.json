@@ -16,11 +16,11 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@wonderlandlabs/hexagony": "^2.0.0",
+    "@wonderlandlabs/hexagony": "latest",
     "@wonderlandlabs/looking-glass-engine": "^3.1.9",
     "@wonderlandlabs/n": "^1.0.2",
     "@wonderlandlabs/propper": "3.0.0",
-    "@wonderlandlabs/universe": "^1.0.1",
+    "@wonderlandlabs/universe": "latest",
     "axios": "^0.19.0",
     "babel-eslint": "^10.0.3",
     "chroma-js": "^2.0.6",

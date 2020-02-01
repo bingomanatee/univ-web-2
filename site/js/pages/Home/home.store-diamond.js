@@ -101,7 +101,7 @@ export default ({ size, history }) => {
       });
       s.do.cloneArrows();
     })
-    .method('onArrowOut', (s, ord) => {
+    .method('onArrowOut', (s) => {
       s.my.arrows.forEach((a) => a.over = false);
       s.do.cloneArrows();
     })
@@ -118,9 +118,18 @@ export default ({ size, history }) => {
     .method('onMove', (s) => {
       pollUniverseData();
     })
+    .property('lastUpdate', 0, 'number')
+    .method('updateDelta', (s) => {
+      if (!s.my.lastUpdate) return 1;
+      return _N(Date.now()).sub(s.my.lastUpdate).div(100).clamp(0.2, 2).value;
+    })
     .method('updateCenter', (s) => {
-      const x = _N(s.my.direction).cos(true).times(s.my.speed).times(SPEED_K).value;
-      const y = _N(s.my.direction).sin(true).times(s.my.speed).times(SPEED_K).value;
+      const delta = s.do.updateDelta();
+      s.do.setLastUpdate(Date.now());
+      const x = _N(s.my.direction).cos(true).times(s.my.speed).times(SPEED_K)
+        .times(delta).value;
+      const y = _N(s.my.direction).sin(true).times(s.my.speed).times(SPEED_K)
+        .times(delta).value;
 
       s.do.setOffsetX(s.my.offsetX + x);
       s.do.setOffsetY(s.my.offsetY + y);
@@ -266,19 +275,21 @@ export default ({ size, history }) => {
       if (!s.my.app) {
         return;
       }
-      const time = Date.now();
+    //  const time = Date.now();
       s.do.initAnchor();
 
       const x = -s.my.offsetX;
       const y = -s.my.offsetY;
 
+    //  const t1 = Date.now();
       const hexes = matrix.floodRect(
         x - s.my.width / 1.5,
         y - s.my.height / 1.5,
         x + s.my.width / 1.5,
         y + s.my.height / 1.5,
-        true,
+        matrix,
       );
+     // const t2 = Date.now();
 
       s.my.diamonds.forEach((diamond) => {
         diamond.updated = false;
@@ -287,28 +298,28 @@ export default ({ size, history }) => {
       const diamondGroups = _.groupBy(hexes, HexDiamond.indexOf);
       const visibleIds = Object.keys(diamondGroups);
 
-      const deleted = 0;
+     // const deleted = 0;
 
       visibleIds.forEach((id) => {
         const counts = s.do.countsFor(diamondGroups[id]);
         s.do.updateDiamond(id, counts);
       });
 
-      let updatedCount = 0;
-      let notUpdated = 0;
+      //  let updatedCount = 0;
+      // let notUpdated = 0;
       s.my.diamonds.forEach((diamond) => {
         // console.log('------- drawing diamond ---------', diamond);
         if (!diamond.updated) {
           // console.log('skipping; not updated');
-          notUpdated += 1;
+          // notUpdated += 1;
           return;
         }
-        updatedCount = 1;
+       // updatedCount = 1;
         diamond.draw();
       });
 
-    //  console.log('universeDrawn: ', updatedCount, 'diamonds updated', notUpdated, 'not updated', deleted, 'deleted');
-      // console.log('draw time: ', Date.now() - time);
+      //  console.log('universeDrawn: ', updatedCount, 'diamonds updated', notUpdated, 'not updated', deleted, 'deleted');
+     // console.log('draw time: ', Date.now() - time);
     });
 
   stream.do.initArrows();

@@ -1,10 +1,26 @@
 import React, { Component } from 'react';
-import { Box, Stack } from 'grommet';
-
+import { Box } from 'grommet';
+import styled from 'styled-components';
 import homeStore from './home.store-diamond';
 import Controls from './ControlsUnified';
 import Galaxy from './Galaxy/Galaxy';
 import { Main } from '../../views/Main';
+
+const Frame = styled.section`
+width: 100%;
+height: 100%;
+position: relative;
+`;
+
+const FrameItem = styled.div`
+position: absolute;
+width: 100%;
+height: 100%;
+display: flex;
+flex-direction: row;
+align-content: center;
+align-items: center;
+`;
 
 export default class Home extends Component {
   constructor(p) {
@@ -55,23 +71,33 @@ export default class Home extends Component {
       galaxy, arrows, speed, centerHex,
     } = this.state;
     return (
-      <Stack active={1} anchor="center">
-        <Main ref={this._ref} />
-        <Box direction="column" fill height="20rem" align="center">
-          {galaxy ? <Galaxy size={this.props.size} galaxy={galaxy} centerHex={centerHex} onClick={this.stream.do.closeGalaxy} /> : (
-            <Controls
-              arrows={arrows}
-              speed={speed}
-              onArrowOut={this.stream.do.onArrowOut}
-              onArrowOver={this.stream.do.onArrowOver}
-              onArrowDown={this.stream.do.onArrowDown}
-              setSpeed={this.stream.do.updateSpeed}
-              zoom={this.stream.do.zoom}
-              stream={this.stream}
-            />
-          )}
-        </Box>
-      </Stack>
+      <Frame>
+        <FrameItem>
+          <Main ref={this._ref} />
+        </FrameItem>
+        <FrameItem>
+          <Box
+            direction="column"
+            fill={true}
+            height="20rem"
+            align="center"
+            justify="center"
+          >
+            {galaxy ? <Galaxy size={this.props.size} galaxy={galaxy} centerHex={centerHex} onClick={this.stream.do.closeGalaxy} /> : (
+              <Controls
+                arrows={arrows}
+                speed={speed}
+                onArrowOut={this.stream.do.onArrowOut}
+                onArrowOver={this.stream.do.onArrowOver}
+                onArrowDown={this.stream.do.onArrowDown}
+                setSpeed={this.stream.do.updateSpeed}
+                zoom={this.stream.do.zoom}
+                stream={this.stream}
+              />
+            )}
+          </Box>
+        </FrameItem>
+      </Frame>
     );
   }
 }

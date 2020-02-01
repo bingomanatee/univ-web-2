@@ -61,7 +61,7 @@ class GalaxyCount {
   }
 
   drawHex(graphics) {
-    const alpha = _N(this.galaxies).div(100).clamp(0, 1).value;
+    const alpha = _N(this.galaxies).div(50).clamp(0, 1).value;
     graphics.beginFill(GalaxyCount.galaxyColor(this.galaxies), alpha);
     this.hexLine(graphics);
     graphics.endFill();
@@ -73,10 +73,14 @@ class GalaxyCount {
   }
 
   addStars(graphics) {
-    return _.range(0, Math.sqrt(2 * this.galaxies)).map((n) => this.addStar(graphics, n));
+    const spriteCount = Math.sqrt(this.galaxies);
+    const discCount = this.galaxies - spriteCount;
+    const sprites = _.range(0, spriteCount).map((n) => this.addStar(graphics, n));
+    _.range(0, discCount).map((n) => this.addStar(graphics, n, true));
+    return sprites;
   }
 
-  addStar(graphics, n) {
+  addStar(graphics, n, drawDisc) {
     const referencePoints = _(this.corners)
       .shuffle()
       .slice(0, 3)
@@ -89,15 +93,16 @@ class GalaxyCount {
       return p.clone().lerp(a, Math.random());
     }, null);
 
-    const opacity = 0.5 / _.random(0.25, 1);
+    const opacity = _.random(0.25, 1);
     const color = GalaxyCount.galaxyColor(n, 50, 0.8, 0.4);
-    const radius = _.random(0.5, 1, true);
-    if (siteStore.my.galaxySheet) {
+    const radius = _.random(0.5, 2, true);
+    if ((!drawDisc) && siteStore.my.galaxySheet) {
       const sprite = siteStore.do.randomSprite();
       sprite.x = center.x;
       sprite.y = center.y;
-      sprite.scale = { x: radius / 10, y: radius / 10 };
-     // sprite.tint = color;
+      const scale = radius / _.random(6, 15);
+      sprite.scale = { x: scale, y: scale };
+      // sprite.tint = color;
       sprite.alpha = opacity;
       return sprite;
     }
@@ -139,18 +144,19 @@ GalaxyCount.idFor = ({
 
 GalaxyCount.galaxyColor = (n, hueVariation = 0, satVariation = 0, brightnessVariation = 0) => chroma.hsl(
   _N(n)
+    .times(3)
     .plus(hueVariation ? _.random(-hueVariation, hueVariation) : 0)
-    .plus(140)
+    .plus(160)
     .mod(360)
     .clamp(0, 360)
     .value,
 
-  _N(0.5)
+  _N(0.25)
     .sub(satVariation ? _.random(-satVariation, satVariation) : 0)
     .clamp(0, 1)
     .value,
 
-  _N(0.75)
+  _N(0.25)
     .plus(brightnessVariation ? _.random(-brightnessVariation, brightnessVariation) : 0)
     .value,
 ).num();
