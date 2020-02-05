@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import { Box } from 'grommet';
 import styled from 'styled-components';
 import homeStore from './home.store-diamond';
-import Controls from './ControlsUnified';
+import Controls from './ControlsSingular';
 import Galaxy from './Galaxy/Galaxy';
 import { Main } from '../../views/Main';
 

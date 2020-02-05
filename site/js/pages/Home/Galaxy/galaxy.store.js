@@ -1,16 +1,16 @@
 import axios from 'axios';
 import { CubeCoord, Hexes } from '@wonderlandlabs/hexagony';
 import { Universe } from '@wonderlandlabs/universe';
+import tinygradient from 'tinygradient';
 import * as PIXI from 'pixi.js';
 import chroma from 'chroma-js';
 import _ from 'lodash';
 import _N from '@wonderlandlabs/n';
+import { standardDeviation, mean } from 'simple-statistics';
 import pixiStreamFactory from '../../../store/pixiStreamFactory';
-import apiRoot from '../../../util/apiRoot';
-import {
-  LY_PER_PX, PX_PER_HEX, LY_PER_HEX, SUBSECTOR_DIV,
-} from '../../../util/constants';
+import { LY_PER_HEX, SUBSECTOR_DIV, STAR_DIV } from '../../../util/constants';
 import siteStore from '../../../store/site.store';
+import { StarDisc, GalaxyNoise } from './galaxyUtils';
 
 const BACKGROUND_FILL = chroma(30, 0, 15).num();
 const WHITE = chroma(255, 255, 255).num();
@@ -22,6 +22,17 @@ const SCANNER_COLOR = BACKGROUND_LINE;
 const SECTOR_COLOR = chroma(255, 225, 200).num();
 const SCANNER_ROTATION_SPEED = 0.05;
 const SCANNER_ALPHA = 0.25;
+const TRANS_LENGTH = 800;
+const TRANS_LINE_COLOR = chroma(204, 204, 255).num();
+const TRANS_FILL_COLOR = chroma(0, 0, 0).num();
+const STAR_COLOR = chroma(255, 250, 245).num();
+const densityGradient = tinygradient([
+  chroma(0, 0, 25).css(),
+  chroma(25, 15, 51).css(),
+  chroma(153, 80, 145).css(),
+  chroma(51, 102, 175).css(),
+  chroma(220, 255, 255).css(),
+]);
 
 const divideUrl = (coord) => `https://univ-2019.appspot.com/uni/x0y0z0.x${coord.x}y${coord.y}z${coord.z}/_/divide`;
 
@@ -29,7 +40,12 @@ const univSector = new Universe({
   diameter: LY_PER_HEX,
   galaxies: 0,
 });
+
 univSector.makeSubsectors(SUBSECTOR_DIV);
+
+const absMatrix = new Hexes({ scale: 1, ponty: true });
+
+const ci = (n) => _N(n).round().clamp(0, 1).value;
 
 /* ---------------- FACTORY ----------------- */
 
@@ -38,24 +54,112 @@ export default ({ size, galaxy, onClick }) => {
   stream.name = 'galaxyStore';
 
   stream.property('galaxy', galaxy)
+    .property('galaxyStars', null)
     .property('chosenGalaxy', false)
+    .property('galaxyParts', [], 'array')
+    .method('initGalaxyStars', (s) => {
+      console.log('---- initGalaxyStars');
+      s.do.setGalaxyParts([]);
+      if (!s.my.chosenGalaxy) {
+        s.do.setGalaxyStars(null);
+        return;
+      }
+      console.log('chosenGalaxy', s.my.chosenGalaxy);
+      const galaxyStars = new Universe({
+        diameter: s.my.chosenGalaxy.d,
+        galaxies: 0,
+      });
+      galaxyStars.makeSubsectors(STAR_DIV);
+      s.do.setGalaxyStars(galaxyStars);
+      const parts = s.my.galaxyParts;
+      s.do.setGalaxyParts([...parts, StarDisc.random(galaxyStars.diameter),
+        new GalaxyNoise({ diameter: galaxyStars.diameter, scale: _.random(10, 20, true), density: _.random(0.15, 0.25) }),
+        new GalaxyNoise({ diameter: galaxyStars.diameter, scale: _.random(20, 40, true), density: _.random(0.01, 0.1, true) }),
+      ]);
+      // console.log('galaxy diameter:', galaxyStars.diameter);
+      //  console.log('parts:', s.my.galaxyParts);
+      const [disc] = s.my.galaxyParts;
+      //  console.log('disc x:', disc.x / galaxyStars.diameter);
+      //  console.log('disc y:', disc.y / galaxyStars.diameter);
+      //  console.log('disc diameter:', disc.diameter / galaxyStars.diameter);
+      //  console.log('disc density:', disc.density);
+      s.do.distributeStars();
+      s.do.drawStars();
+    }, true)
+    .method('distributeStars', (s) => {
+      if (!s.my.galaxyStars) {
+        return;
+      }
+
+      const densities = [];
+
+      s.my.galaxyStars.forEach((sector) => {
+        sector.starDensity = 0;
+        s.my.galaxyParts.forEach((part) => {
+          sector.starDensity += part.densityAt(sector);
+        });
+        if (sector.starDensity > 0) {
+          densities.push(sector.starDensity);
+        }
+      });
+
+      const starMean = mean(densities);
+      const starDev = standardDeviation(densities);
+      // console.log('starMean', starMean, 'starDev', starDev);
+      s.my.galaxyStars.forEach((sector) => {
+        const maxStars = (sector.diameter ** 2) / 80;
+        if (sector.starDensity > 0) {
+          // console.log('-- max stars:', maxStars);
+          // console.log(sector.x, ',', sector.y, 'original density: ', sector.starDensity);
+          sector.starDensity = _N(sector.starDensity).sub(starMean).div(2 * starDev).plus(0.5)
+            .clamp(1, 0).value;
+          sector.stars = _N(sector.starDensity).times(maxStars).max(0).round().value;
+          // console.log(sector.x, ',', sector.y, 'density: ', sector.starDensity, 'stars', sector.stars);
+        }
+      });
+    })
     .method('chooseGalaxy', (s, sector) => {
       s.do.setChosenGalaxy(sector);
-    })
+      s.do.initGalaxyStars();
+    }, true)
     .property('sectors', [], 'array')
-    .property('sectorContainer', null)
+    .property('sectorCtr', null)
     .method('updateSectors', (s, sectors) => {
       console.log('sectors updated:', sectors);
       s.do.setSectors(sectors);
       s.do.drawSectors(sectors);
     })
     .method('sectorMatrix', (s) => {
+      /**
+       * This matrix is calibrated to screen space, for a sctor
+       * @type {number}
+       */
       const scale = s.do.backRadius() / SUBSECTOR_DIV;
       return new Hexes({ scale, pointy: true });
     })
+    .method('starSectorMatrix', (s) => {
+    /**
+     * This matrix is calibrated to screen space, for a galaxy
+     * @type {number}
+     */
+      const scale = s.do.backRadius() / STAR_DIV;
+      return new Hexes({ scale, pointy: true });
+    })
+    .method('starMatrix', (s) => {
+      /**
+       * this matrix is calibrated to light years
+       */
+      if (!s.my.galaxyStars) {
+        return null;
+      }
+      const firstChild = Array.from(s.my.galaxyStars.children)[0];
+      return new Hexes({ scale: firstChild.diameter * 2, pointy: true });
+    })
     .method('drawSectors', (s) => {
-      s.my.sectorContainer.removeChildren();
-      if (s.my.chosenGalaxy) return;
+      s.my.sectorCtr.removeChildren();
+      if (s.my.chosenGalaxy) {
+        return;
+      }
       const matrix = s.do.sectorMatrix();
 
       s.my.sectors.forEach((sector) => {
@@ -68,14 +172,14 @@ export default ({ size, galaxy, onClick }) => {
           sprite.on('click', (e) => s.do.chooseGalaxy(sector));
           sprite.buttonMode = true;
 
-          s.my.sectorContainer.addChild(sprite);
+          s.my.sectorCtr.addChild(sprite);
           const scale = matrix.scale / _.random(40, 120);
           sprite.scale = { x: scale, y: scale };
           sprite.x = xy.x;
           sprite.y = xy.y;
           sector.graphics = sprite;
 
-          s.my.sectorContainer.addChild(sprite);
+          s.my.sectorCtr.addChild(sprite);
         } else {
           const g = new PIXI.Graphics();
           sector.graphics = g;
@@ -144,15 +248,56 @@ export default ({ size, galaxy, onClick }) => {
 
           g.endFill();
 
-          s.my.sectorContainer.addChild(g);
+          s.my.sectorCtr.addChild(g);
         }
       });
     })
-    .method('pickGalaxy', (s, cx, cy) => {
-      const distance = ({ x, y }) => Math.sqrt((x - cx) ** 2 + (y - cy) ** 2);
+    .method('pollStars', (s) => {
+      const stars = [];
+      s.my.galaxyStars.forEach((sector) => {
+        if (sector.stars > 0) {
+          stars.push(sector.stars);
+        }
+      });
+
+      return { mean: mean(stars), dev: standardDeviation(stars), max: _.max(stars) };
     })
     .method('drawStars', (s) => {
+      if (!s.my.galaxyStars) {
+        return;
+      }
+      const matrix = s.do.starSectorMatrix();
 
+      s.my.starCtr.removeChildren();
+
+      // eslint-disable-next-line prefer-const
+      let graphic = new PIXI.Graphics();
+      s.my.starCtr.addChild(graphic);
+      const stat = s.do.pollStars();
+      const max = stat.mean + 1.5 * stat.dev;
+      let count = 0;
+      console.log('star max: ', stat.max, 'mean', stat.mean, 'dev: ', stat.dev, 'radius scale:', matrix.scale);
+
+      s.my.galaxyStars.forEach((sector) => {
+        const opacity = _N(sector.stars).div(stat.max)
+          .clamp(0, 1).value;
+        const color = densityGradient.rgbAt(opacity);
+        const crColor = chroma(color.toRgbString()).num();
+
+        const { x, y } = sector.coord.toXY(matrix);
+
+        //  console.log('sector', sector.x, sector.y, 'opacity: ', opacity);
+
+        graphic.beginFill(crColor, 1)
+          .drawCircle(x, y, matrix.scale / 2)
+          .endFill();
+        if (++count > 50) {
+          s.my.starCtr.addChild(graphic);
+          graphic = new PIXI.Graphics();
+          count = 0;
+        }
+      });
+      s.my.starCtr.addChild(graphic);
     })
     .method('sizeSectors', (s, angle) => {
       const matrix = s.do.sectorMatrix();
@@ -173,12 +318,12 @@ export default ({ size, galaxy, onClick }) => {
     .property('scanners', [], 'array')
     .property('lastScanTime', 0, 'number')
     .method('scan', (s, init = false) => {
-      if (s.my.stopped || (!s.my.scanContainer)) {
+      if (s.my.stopped || (!s.my.scanCtr)) {
         return;
       }
       if (init) {
         s.do.setLastScanTime(Date.now());
-        s.my.scanContainer.removeChildren();
+        s.my.scanCtr.removeChildren();
         const rad = s.do.backRadius();
         s.do.setScanners(_.range(2, SUBSECTOR_DIV, 2)
           .map((i) => {
@@ -197,40 +342,46 @@ export default ({ size, galaxy, onClick }) => {
                 cc.addChild(g);
                 c.addChild(cc);
               });
-            s.my.scanContainer.addChild(c);
+            s.my.scanCtr.addChild(c);
             return c;
           }));
       }
 
       const time = Date.now();
-      s.my.scanContainer.angle += SCANNER_ROTATION_SPEED * (time - s.my.lastScanTime);
+      s.my.scanCtr.angle += SCANNER_ROTATION_SPEED * (time - s.my.lastScanTime);
       s.do.setLastScanTime(time);
-      s.emit('scanAngle', s.my.scanContainer.angle);
+      s.emit('scanAngle', s.my.scanCtr.angle);
 
       requestAnimationFrame(() => s.do.scan());
     })
     .property('anchor', null)
     .property('backGraphic', null)
-    .property('backContainer', null)
+    .property('backCtr', null)
     .method('centerAnchor', (s) => {
       if (s.my.anchor) {
         s.my.anchor.position = { x: s.my.width / 2, y: s.my.height / 2 };
       }
     })
-    .property('scanContainer', null)
+    .property('scanCtr', null)
+    .property('starCtr', null)
+    .property('transGraphic', null)
     .method('initAnchor', (s) => {
       if (s.my.anchor || !s.my.app) {
         return;
       }
       s.do.setAnchor(new PIXI.Container());
-      s.do.setScanContainer(new PIXI.Container());
-      s.do.setSectorContainer(new PIXI.Container());
+      s.do.setScanCtr(new PIXI.Container());
+      s.do.setSectorCtr(new PIXI.Container());
+      s.do.setStarCtr(new PIXI.Container());
       s.do.setBackGraphic(new PIXI.Graphics());
-      s.do.setBackContainer(new PIXI.Container());
-      s.my.backContainer.addChild(s.my.backGraphic);
-      s.my.anchor.addChild(s.my.backContainer);
-      s.my.anchor.addChild(s.my.scanContainer);
-      s.my.anchor.addChild(s.my.sectorContainer);
+      s.do.setTransGraphic(new PIXI.Graphics());
+      s.do.setBackCtr(new PIXI.Container());
+      s.my.backCtr.addChild(s.my.backGraphic);
+      s.my.anchor.addChild(s.my.backCtr);
+      s.my.anchor.addChild(s.my.scanCtr);
+      s.my.anchor.addChild(s.my.sectorCtr);
+      s.my.anchor.addChild(s.my.transGraphic);
+      s.my.anchor.addChild(s.my.starCtr);
       s.my.app.stage.addChild(s.my.anchor);
       s.do.centerAnchor();
       s.do.listenToClicks();
@@ -265,8 +416,6 @@ export default ({ size, galaxy, onClick }) => {
         });
 
       s.do.drawDots();
-
-      s.do.scan(true);
     })
     .method('drawDots', (s) => {
       const matrix = s.do.sectorMatrix();
@@ -282,11 +431,11 @@ export default ({ size, galaxy, onClick }) => {
           .drawCircle(xy.x, xy.y, 3)
           .endFill();
         if (++count > 50) {
-          s.my.backContainer.addChild(g);
+          s.my.backCtr.addChild(g);
           g = new PIXI.Graphics();
         }
       });
-      s.my.backContainer.addChild(g);
+      s.my.backCtr.addChild(g);
     })
     .property('sectorsLoaded', false, 'boolean')
     .method('noSectors', (s) => !_.get(s, 'my.sectors.length'))
@@ -314,15 +463,15 @@ export default ({ size, galaxy, onClick }) => {
 
       const elapsed = time - s.my.fadeStart;
       if (elapsed > 2000) {
-        s.my.scanContainer.visible = false;
+        s.my.scanCtr.visible = false;
       } else {
-        s.my.scanContainer.alpha = 1 - (elapsed / 2000);
+        s.my.scanCtr.alpha = 1 - (elapsed / 2000);
         requestAnimationFrame(() => s.do.fadeScanner());
       }
     })
     .property('sectorsLoadError', null)
     .method('listenToClicks', (s) => {
-      s.my.sectorContainer.interactiveChildren = true;
+      s.my.sectorCtr.interactiveChildren = true;
       s.my.app.stage.interactiveChildren = true;
       /*      console.log('----listenToClicks');
       s.my.backGraphic.interactive = true;
@@ -331,26 +480,70 @@ export default ({ size, galaxy, onClick }) => {
         console.log('background  --- pointerdown:', e);
       }); */
     })
-    .method('drawReferenceGrid', (s) => {
-      console.log('drawReferenceGrid started');
-      try {
-        const rg = new PIXI.Graphics();
-
-        s.my.app.stage.addChild(rg);
-        _.range(0, s.my.width, 100).forEach((x) => {
-          rg.lineStyle(1, WHITE)
-            .moveTo(x, 0)
-            .lineTo(x, s.my.height);
-        });
-        _.range(0, s.my.height, 100).forEach((y) => {
-          rg.lineStyle(1, WHITE)
-            .moveTo(0, y)
-            .lineTo(s.my.width, y);
-        });
-      } catch (err) {
-        console.log('error in drg: ', err);
+    .method('chosenGalaxyChange', (s, to, prev) => {
+      if (!to) {
+        if (prev) {
+          s.do.closeGalaxy();
+        }
+      } else if (!prev) {
+        s.do.openGalaxy();
       }
-      console.log('drawReferenceGrid ended');
+    })
+    .property('zoomState', 'closed', 'string')
+    .property('targetZoomState', 'closed', 'string')
+    .property('zoomTransLevel', 0, 'number')
+    .watchFlat('zoomTransLevel', (s, value) => {
+      if (s.my.sectorCtr) {
+        s.my.sectorCtr.alpha = (1 - value);
+      }
+    })
+    .method('closeGalaxy', (s) => {
+      s.do.setTargetZoomState('closed');
+    })
+    .method('openGalaxy', (s) => {
+      s.do.setTargetZoomState('open');
+    })
+    .watchFlat('targetZoomState', (s, to, prev) => {
+      if (to !== prev && to !== s.my.zoomState) {
+        s.do.transition(true);
+      }
+    })
+    .property('transTime', 0, 'number')
+    .method('transition', (s, init = false) => {
+      if (init) {
+        s.do.setTransTime(Date.now());
+      }
+      if (s.my.targetZoomState === s.my.zoomState) {
+        s.do.setZoomTransLevel(s.my.zoomState === 'closed' ? 0 : 1);
+      } else {
+        const amount = _N(Date.now()).sub(s.my.transTime).div(TRANS_LENGTH).clamp(0, 1).value;
+        if (s.my.targetZoomState === 'closed') {
+          s.do.setZoomTransLevel(1 - amount);
+        } else {
+          s.do.setZoomTransLevel(amount);
+        }
+      }
+      s.do.drawTransition();
+      if (s.my.targetZoomState === 'closed') {
+        if (s.my.zoomTransLevel > 0) {
+          requestAnimationFrame(() => s.do.transition());
+        }
+      } else if (s.my.targetZoomState === 'open') {
+        if (s.my.zoomTransLevel < 1) {
+          requestAnimationFrame(() => s.do.transition());
+        }
+      }
+    })
+    .method('drawTransition', (s) => {
+      if (!s.my.transGraphic) {
+        return;
+      }
+      s.my.transGraphic.clear();
+      const rad = s.do.backRadius();
+      s.my.transGraphic.lineStyle({ width: 2, color: TRANS_LINE_COLOR })
+        .beginFill(TRANS_FILL_COLOR)
+        .drawCircle(0, 0, rad * s.my.zoomTransLevel)
+        .endFill();
     })
     .method('divide', (s) => {
       axios.get(divideUrl(s.my.galaxy))
@@ -365,13 +558,10 @@ export default ({ size, galaxy, onClick }) => {
         });
     });
 
-  stream.on('initApp', (s) => {
-    s.do.drawReferenceGrid();
-    s.do.drawBackground();
-  });
-  // stream.on('initApp', 'drawReferenceGrid');
+  stream.on('initApp', 'drawBackground');
   stream.on('resizeApp', 'drawSectors');
   stream.on('resizeApp', 'drawBackground');
+  stream.on('resizeApp', (s) => s.do.scan(true));
   stream.watch('sectorsLoaded', 'checkSectors');
   stream.on('resizeApp', (s) => {
     console.log('resizing app');
@@ -379,6 +569,7 @@ export default ({ size, galaxy, onClick }) => {
   });
 
   stream.on('scanAngle', 'sizeSectors');
+  stream.watchFlat('chosenGalaxy', 'chosenGalaxyChange');
 
   stream.do.divide();
   return stream;
