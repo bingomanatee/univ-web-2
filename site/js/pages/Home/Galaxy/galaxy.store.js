@@ -26,13 +26,31 @@ const TRANS_LENGTH = 800;
 const TRANS_LINE_COLOR = chroma(204, 204, 255).num();
 const TRANS_FILL_COLOR = chroma(0, 0, 0).num();
 
-const densityGradient = tinygradient([
-  chroma(0, 0, 25).css(),
+const densityGradientBlue = tinygradient([
+  chroma(10, 10, 10).css(),
   chroma(25, 15, 51).css(),
   chroma(125, 80, 145).css(),
   chroma(133, 102, 175).css(),
   chroma(220, 255, 255).css(),
 ]);
+
+const densityGradientRed = tinygradient([
+  chroma(10, 10, 10).css(),
+  chroma(51, 15, 25).css(),
+  chroma(145, 80, 125).css(),
+  chroma(175, 102, 133).css(),
+  chroma(255, 245, 245).css(),
+]);
+
+const densityGradientGreen = tinygradient([
+  chroma(10, 10, 10).css(),
+  chroma(15, 51, 25).css(),
+  chroma(80, 145, 125).css(),
+  chroma(102, 175, 133).css(),
+  chroma(245, 255, 245).css(),
+]);
+
+const gradient = () => _([densityGradientBlue, densityGradientGreen, densityGradientRed]).shuffle().first();
 
 const divideUrl = (coord) => `https://univ-2019.appspot.com/uni/x0y0z0.x${coord.x}y${coord.y}z${coord.z}/_/divide`;
 
@@ -74,8 +92,8 @@ export default ({ size, galaxy, onClick }) => {
       console.log('making galaxy parts with diameter', galaxyStars.diameter);
       s.do.setGalaxyParts([
         StarDisc.random(galaxyStars.diameter, 0.5),
-        new GalaxyNoise({ diameter: galaxyStars.diameter, scale: _.random(10, 20, true), density: _.random(0.15, 0.25) }),
-        new GalaxyNoise({ diameter: galaxyStars.diameter, scale: _.random(20, 40, true), density: _.random(0.01, 0.1, true) }),
+        new GalaxyNoise({ diameter: galaxyStars.diameter, scale: _.random(10, 20, true), density: _.random(0.05, 0.3) }),
+        new GalaxyNoise({ diameter: galaxyStars.diameter, scale: _.random(20, 40, true), density: _.random(0.01, 0.3, true) }),
         GalaxySpiral.random(galaxyStars.diameter, _.random(0.5, 1.2)),
       ]);
       // console.log('galaxy diameter:', galaxyStars.diameter);
@@ -278,7 +296,8 @@ export default ({ size, galaxy, onClick }) => {
       const stat = s.do.pollStars();
       let count = 0;
       console.log('star max: ', stat.max, 'mean', stat.mean, 'dev: ', stat.dev, 'radius scale:', matrix.scale);
-
+      const densityGradient = gradient();
+      console.log('gradient:', densityGradient);
       s.my.galaxyStars.forEach((sector) => {
         const opacity = _N(sector.stars).div(stat.max)
           .clamp(0, 1).value;

@@ -1,5 +1,5 @@
-import {proppify} from '@wonderlandlabs/propper';
-import {Hexes} from '@wonderlandlabs/hexagony';
+import { proppify } from '@wonderlandlabs/propper';
+import { Hexes } from '@wonderlandlabs/hexagony';
 import _ from 'lodash';
 import _N from '@wonderlandlabs/n';
 import be from 'bezier-easing';
@@ -25,7 +25,7 @@ export class StarDisc {
   }
 
   densityAt(sector) {
-    const matrix = new Hexes({scale: sector.diameter * 2, pointy: true});
+    const matrix = new Hexes({ scale: sector.diameter * 2, pointy: true });
     const p = sector.coord.toXY(matrix);
 
     const dist = _N(p.x).minus(this.x).sq()
@@ -78,6 +78,7 @@ export class GalaxySpiral {
   constructor(props) {
     console.log('new GalaxySpiral', props);
     this.x = _.get(props, 'x', 0);
+    this.spin = _.get(props, 'spin', 1);
     this.y = _.get(props, 'y', 0);
     this.diameter = _.get(props, 'diameter', 1);
     this.density = _.get(props, 'density', 1);
@@ -94,7 +95,7 @@ export class GalaxySpiral {
   }
 
   densityAt(sector) {
-    const matrix = new Hexes({scale: sector.diameter * 2, pointy: true});
+    const matrix = new Hexes({ scale: sector.diameter * 2, pointy: true });
     const p = sector.coord.toXY(matrix);
 
     const dist = this.distance(p);
@@ -109,7 +110,7 @@ export class GalaxySpiral {
     const angle = _N(Math.atan2(aY, aX))
       .deg();
 
-    const sin = angle.plus(360)
+    const sin = angle.times(this.spin)
       .plus(360)
       .plus(relDistance.times(this.twirls).times(360))
       .mod(360)
@@ -146,20 +147,27 @@ proppify(GalaxySpiral)
   .addProp('density', 1, 'number')
   .addProp('diameter', 1, 'number')
   .addProp('arms', 5, 'number')
+  .addProp('spin', 1, 'number')
   .addProp('twirls', 1, 'number');
 
 GalaxySpiral.random = (diam, density = 0.8) => {
   const x = _.random(-diam / 10, diam / 10, true);
   const y = _.random(-diam / 10, diam / 10, true);
   const discDiameter = _N(diam).sub(_N(x).abs().max(_N(y).abs())).value;
+  const spin = _([-1,1]).shuffle().first();
   console.log('galaxy spiral random diameter: ', diam, 'discDiameter: ', discDiameter);
   return new GalaxySpiral({
-    x, y, diameter: discDiameter, density,
+    arms: _.random(5, 8),
+    x,
+    y,
+    spin,
+    diameter: discDiameter,
+    density,
   });
 };
 
 export class GalaxyNoise {
-  constructor({diameter, density, scale}) {
+  constructor({ diameter, density, scale }) {
     this.diameter = diameter;
     this.density = density;
     this.scale = scale || 10;
@@ -176,7 +184,7 @@ export class GalaxyNoise {
    * @returns {d}
    */
   densityAt(sector) {
-    const matrix = new Hexes({scale: sector.diameter * 2, pointy: true});
+    const matrix = new Hexes({ scale: sector.diameter * 2, pointy: true });
     const p = sector.coord.toXY(matrix);
 
     return _N(this.noise.noise2D(this.scaleDim(p.x), this.scaleDim(p.y))).minus(1).div(2).times(this.density).value;
