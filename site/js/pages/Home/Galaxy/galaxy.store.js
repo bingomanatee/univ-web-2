@@ -10,7 +10,7 @@ import { standardDeviation, mean } from 'simple-statistics';
 import pixiStreamFactory from '../../../store/pixiStreamFactory';
 import { LY_PER_HEX, SUBSECTOR_DIV, STAR_DIV } from '../../../util/constants';
 import siteStore from '../../../store/site.store';
-import { StarDisc, GalaxyNoise } from './galaxyUtils';
+import { StarDisc, GalaxyNoise, GalaxySpiral } from './galaxyUtils';
 
 const BACKGROUND_FILL = chroma(30, 0, 15).num();
 const WHITE = chroma(255, 255, 255).num();
@@ -25,12 +25,12 @@ const SCANNER_ALPHA = 0.25;
 const TRANS_LENGTH = 800;
 const TRANS_LINE_COLOR = chroma(204, 204, 255).num();
 const TRANS_FILL_COLOR = chroma(0, 0, 0).num();
-const STAR_COLOR = chroma(255, 250, 245).num();
+
 const densityGradient = tinygradient([
   chroma(0, 0, 25).css(),
   chroma(25, 15, 51).css(),
-  chroma(153, 80, 145).css(),
-  chroma(51, 102, 175).css(),
+  chroma(125, 80, 145).css(),
+  chroma(133, 102, 175).css(),
   chroma(220, 255, 255).css(),
 ]);
 
@@ -71,10 +71,12 @@ export default ({ size, galaxy, onClick }) => {
       });
       galaxyStars.makeSubsectors(STAR_DIV);
       s.do.setGalaxyStars(galaxyStars);
-      const parts = s.my.galaxyParts;
-      s.do.setGalaxyParts([...parts, StarDisc.random(galaxyStars.diameter),
+      console.log('making galaxy parts with diameter', galaxyStars.diameter);
+      s.do.setGalaxyParts([
+        StarDisc.random(galaxyStars.diameter, 0.5),
         new GalaxyNoise({ diameter: galaxyStars.diameter, scale: _.random(10, 20, true), density: _.random(0.15, 0.25) }),
         new GalaxyNoise({ diameter: galaxyStars.diameter, scale: _.random(20, 40, true), density: _.random(0.01, 0.1, true) }),
+        GalaxySpiral.random(galaxyStars.diameter, _.random(0.5, 1.2)),
       ]);
       // console.log('galaxy diameter:', galaxyStars.diameter);
       //  console.log('parts:', s.my.galaxyParts);
@@ -138,10 +140,10 @@ export default ({ size, galaxy, onClick }) => {
       return new Hexes({ scale, pointy: true });
     })
     .method('starSectorMatrix', (s) => {
-    /**
-     * This matrix is calibrated to screen space, for a galaxy
-     * @type {number}
-     */
+      /**
+       * This matrix is calibrated to screen space, for a galaxy
+       * @type {number}
+       */
       const scale = s.do.backRadius() / STAR_DIV;
       return new Hexes({ scale, pointy: true });
     })
@@ -274,7 +276,6 @@ export default ({ size, galaxy, onClick }) => {
       let graphic = new PIXI.Graphics();
       s.my.starCtr.addChild(graphic);
       const stat = s.do.pollStars();
-      const max = stat.mean + 1.5 * stat.dev;
       let count = 0;
       console.log('star max: ', stat.max, 'mean', stat.mean, 'dev: ', stat.dev, 'radius scale:', matrix.scale);
 
