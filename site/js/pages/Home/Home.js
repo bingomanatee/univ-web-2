@@ -3,7 +3,7 @@ import { Box } from 'grommet';
 import styled from 'styled-components';
 import homeStore from './home.store-diamond';
 import Controls from './ControlsSingular';
-import Galaxy from './Galaxy/Galaxy';
+import GalaxySector from './GalaxySector';
 import { Main } from '../../views/Main';
 
 const Frame = styled.section`
@@ -20,6 +20,7 @@ display: flex;
 flex-direction: row;
 align-content: center;
 align-items: center;
+justify-content: center;
 `;
 
 export default class Home extends Component {
@@ -68,7 +69,7 @@ export default class Home extends Component {
 
   render() {
     const {
-      galaxy, arrows, speed, centerHex,
+      sector, arrows, speed, centerHex, galaxy,
     } = this.state;
     return (
       <Frame>
@@ -76,27 +77,36 @@ export default class Home extends Component {
           <Main ref={this._ref} />
         </FrameItem>
         <FrameItem>
-          <Box
-            direction="column"
-            fill={true}
-            height="20rem"
-            align="center"
-            justify="center"
-          >
-            {galaxy ? <Galaxy size={this.props.size} galaxy={galaxy} centerHex={centerHex} onClick={this.stream.do.closeGalaxy} /> : (
-              <Controls
-                arrows={arrows}
-                speed={speed}
-                onArrowOut={this.stream.do.onArrowOut}
-                onArrowOver={this.stream.do.onArrowOver}
-                onArrowDown={this.stream.do.onArrowDown}
-                setSpeed={this.stream.do.updateSpeed}
-                zoom={this.stream.do.zoom}
-                stream={this.stream}
-              />
-            )}
-          </Box>
+          {sector ? (
+            <GalaxySector
+              size={this.props.size}
+              sector={sector}
+              centerHex={centerHex}
+              onGalaxy={this.stream.do.chooseGalaxy}
+              onClose={this.stream.do.closeSector}
+            />
+          ) : (
+            <Controls
+              arrows={arrows}
+              speed={speed}
+              onArrowOut={this.stream.do.onArrowOut}
+              onArrowOver={this.stream.do.onArrowOver}
+              onArrowDown={this.stream.do.onArrowDown}
+              setSpeed={this.stream.do.updateSpeed}
+              zoom={this.stream.do.zoom}
+              stream={this.stream}
+            />
+          )}
         </FrameItem>
+        { galaxy ? (
+          <FrameItem>
+            <Galaxy
+              size={this.props.size}
+              sector={sector}
+              galaxy={galaxy}
+            />
+          </FrameItem>
+        ) : ''}
       </Frame>
     );
   }

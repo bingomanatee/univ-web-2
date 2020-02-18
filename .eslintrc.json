@@ -26,6 +26,7 @@
     "react/prop-types": 0,
     "class-methods-use-this": 0,
     "no-underscore-dangle": 0,
+    "no-param-reassign": "warn",
     "jsx-a11y/no-static-element-interactions": 0,
     "jsx-a11y/label-has-associated-control": 0,
     "import/no-named-as-default": 0,

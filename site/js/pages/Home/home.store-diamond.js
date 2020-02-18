@@ -71,13 +71,17 @@ export default ({ size, history }) => {
   };
 
   stream
+    .property('sector', null)
     .property('galaxy', null)
+    .method('chooseGalaxy', (s, galaxy) => {
+      this.do.setGalaxy(galaxy);
+    })
     .method('zoom', (s) => {
       s.do.setSpeed(0);
-      s.do.setGalaxy(s.my.centerHex);
+      s.do.setSector(s.my.centerHex);
     }, true)
-    .method('closeGalaxy', (s) => {
-      s.do.setGalaxy(null);
+    .method('closeSector', (s) => {
+      s.do.setSector(null);
     })
     .property('arrows', new Map())
     .method('initArrows', (s) => {
@@ -275,13 +279,13 @@ export default ({ size, history }) => {
       if (!s.my.app) {
         return;
       }
-    //  const time = Date.now();
+      //  const time = Date.now();
       s.do.initAnchor();
 
       const x = -s.my.offsetX;
       const y = -s.my.offsetY;
 
-    //  const t1 = Date.now();
+      //  const t1 = Date.now();
       const hexes = matrix.floodRect(
         x - s.my.width / 1.5,
         y - s.my.height / 1.5,
@@ -289,7 +293,7 @@ export default ({ size, history }) => {
         y + s.my.height / 1.5,
         matrix,
       );
-     // const t2 = Date.now();
+      // const t2 = Date.now();
 
       s.my.diamonds.forEach((diamond) => {
         diamond.updated = false;
@@ -298,7 +302,7 @@ export default ({ size, history }) => {
       const diamondGroups = _.groupBy(hexes, HexDiamond.indexOf);
       const visibleIds = Object.keys(diamondGroups);
 
-     // const deleted = 0;
+      // const deleted = 0;
 
       visibleIds.forEach((id) => {
         const counts = s.do.countsFor(diamondGroups[id]);
@@ -314,12 +318,12 @@ export default ({ size, history }) => {
           // notUpdated += 1;
           return;
         }
-       // updatedCount = 1;
+        // updatedCount = 1;
         diamond.draw();
       });
 
       //  console.log('universeDrawn: ', updatedCount, 'diamonds updated', notUpdated, 'not updated', deleted, 'deleted');
-     // console.log('draw time: ', Date.now() - time);
+      // console.log('draw time: ', Date.now() - time);
     });
 
   stream.do.initArrows();

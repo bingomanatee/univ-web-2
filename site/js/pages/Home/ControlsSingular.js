@@ -38,12 +38,10 @@ class SvgControlsSingular extends PureComponent {
   }
 
   zoomOver() {
-    console.log('----- zoom over');
     this.setState({ zoomHover: true }, this.incZoom);
   }
 
   zoomOut() {
-    console.log('----- zoom out');
     this.setState({ zoomHover: false });
   }
 
@@ -52,7 +50,6 @@ class SvgControlsSingular extends PureComponent {
       const lastZoomed = Date.now() - this.state.lastZoomTime;
       if (lastZoomed >= ZOOM_DELAY) {
         const zoomIndex = (this.state.zoomIndex + 1) % ZOOMS;
-        console.log('zoom set to ', zoomIndex);
         this.setState({ zoomIndex, lastZoomTime: Date.now() }, this.incZoom);
       } else {
         requestAnimationFrame(this.incZoom);

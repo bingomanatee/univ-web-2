@@ -67,21 +67,22 @@ const ci = (n) => _N(n).round().clamp(0, 1).value;
 
 /* ---------------- FACTORY ----------------- */
 
-export default ({
-  size, sector, onClose, onChooseGalaxy,
-}) => {
+export default ({ size, sector, onClose, onGalaxy }) => {
   const stream = pixiStreamFactory({ size });
   stream.name = 'galaxyStore';
 
   stream.property('sector', sector)
+    .property('galaxyStars', null)
     .property('chosenGalaxy', false)
-    .method('chooseGalaxy', (s, galaxy) => {
-      s.do.setChosenGalaxy(galaxy);
-      onChooseGalaxy(galaxy);
+    .property('galaxyParts', [], 'array')
+    .method('chooseGalaxy', (s, galaxySector) => {
+      s.do.setChosenGalaxy(galaxySector);
+      onGalaxy(galaxySector);
     }, true)
     .property('sectors', [], 'array')
     .property('sectorCtr', null)
     .method('updateSectors', (s, sectors) => {
+      console.log('sectors updated:', sectors);
       s.do.setSectors(sectors);
       s.do.drawSectors(sectors);
     })
@@ -93,6 +94,24 @@ export default ({
       const scale = s.do.backRadius() / SUBSECTOR_DIV;
       return new Hexes({ scale, pointy: true });
     })
+    .method('starSectorMatrix', (s) => {
+      /**
+       * This matrix is calibrated to screen space, for a galaxy
+       * @type {number}
+       */
+      const scale = s.do.backRadius() / STAR_DIV;
+      return new Hexes({ scale, pointy: true });
+    })
+    .method('starMatrix', (s) => {
+      /**
+       * this matrix is calibrated to light years
+       */
+      if (!s.my.galaxyStars) {
+        return null;
+      }
+      const firstChild = Array.from(s.my.galaxyStars.children)[0];
+      return new Hexes({ scale: firstChild.diameter * 2, pointy: true });
+    })
     .method('drawSectors', (s) => {
       s.my.sectorCtr.removeChildren();
       if (s.my.chosenGalaxy) {
@@ -100,14 +119,14 @@ export default ({
       }
       const matrix = s.do.sectorMatrix();
 
-      s.my.sectors.forEach((sector) => {
-        const coord = new CubeCoord(sector.x, sector.y);
+      s.my.sectors.forEach((subsector) => {
+        const coord = new CubeCoord(subsector.x, subsector.y);
         const xy = coord.toXY(matrix);
 
         if (siteStore.my.galaxySheet) {
           const sprite = siteStore.do.randomSprite();
           sprite.interactive = true;
-          sprite.on('click', (e) => s.do.chooseGalaxy(sector));
+          sprite.on('click', (e) => s.do.chooseGalaxy(subsector));
           sprite.buttonMode = true;
 
           s.my.sectorCtr.addChild(sprite);
@@ -115,16 +134,16 @@ export default ({
           sprite.scale = { x: scale, y: scale };
           sprite.x = xy.x;
           sprite.y = xy.y;
-          sector.graphics = sprite;
+          subsector.graphics = sprite;
 
           s.my.sectorCtr.addChild(sprite);
         } else {
           const g = new PIXI.Graphics();
-          sector.graphics = g;
+          subsector.graphics = g;
           g.position = xy;
 
           g.interactive = true;
-          g.on('click', (e) => s.do.chooseGalaxy(sector));
+          g.on('click', (e) => s.do.chooseGalaxy(subsector));
 
           let radialPoints = _(_.range(0, 360, 15))
             .map((a) => {
@@ -189,6 +208,53 @@ export default ({
           s.my.sectorCtr.addChild(g);
         }
       });
+    })
+    .method('pollStars', (s) => {
+      const stars = [];
+      s.my.galaxyStars.forEach((sector) => {
+        if (sector.stars > 0) {
+          stars.push(sector.stars);
+        }
+      });
+
+      return { mean: mean(stars), dev: standardDeviation(stars), max: _.max(stars) };
+    })
+    .method('drawStars', (s) => {
+      if (!s.my.galaxyStars) {
+        return;
+      }
+      const matrix = s.do.starSectorMatrix();
+
+      s.my.starCtr.removeChildren();
+
+      // eslint-disable-next-line prefer-const
+      let graphic = new PIXI.Graphics();
+      s.my.starCtr.addChild(graphic);
+      const stat = s.do.pollStars();
+      let count = 0;
+      console.log('star max: ', stat.max, 'mean', stat.mean, 'dev: ', stat.dev, 'radius scale:', matrix.scale);
+      const densityGradient = gradient();
+      console.log('gradient:', densityGradient);
+      s.my.galaxyStars.forEach((sector) => {
+        const opacity = _N(sector.stars).div(stat.max)
+          .clamp(0, 1).value;
+        const color = densityGradient.rgbAt(opacity);
+        const crColor = chroma(color.toRgbString()).num();
+
+        const { x, y } = sector.coord.toXY(matrix);
+
+        //  console.log('sector', sector.x, sector.y, 'opacity: ', opacity);
+
+        graphic.beginFill(crColor, 1)
+          .drawCircle(x, y, matrix.scale / 2)
+          .endFill();
+        if (++count > 50) {
+          s.my.starCtr.addChild(graphic);
+          graphic = new PIXI.Graphics();
+          count = 0;
+        }
+      });
+      s.my.starCtr.addChild(graphic);
     })
     .method('sizeSectors', (s, angle) => {
       const matrix = s.do.sectorMatrix();
@@ -263,6 +329,7 @@ export default ({
       s.do.setAnchor(new PIXI.Container());
       s.do.setScanCtr(new PIXI.Container());
       s.do.setSectorCtr(new PIXI.Container());
+      s.do.setStarCtr(new PIXI.Container());
       s.do.setBackGraphic(new PIXI.Graphics());
       s.do.setTransGraphic(new PIXI.Graphics());
       s.do.setBackCtr(new PIXI.Container());
@@ -271,13 +338,14 @@ export default ({
       s.my.anchor.addChild(s.my.scanCtr);
       s.my.anchor.addChild(s.my.sectorCtr);
       s.my.anchor.addChild(s.my.transGraphic);
+      s.my.anchor.addChild(s.my.starCtr);
       s.my.app.stage.addChild(s.my.anchor);
       s.do.centerAnchor();
       s.do.listenToClicks();
     })
     .method('close', (s) => {
       s.do.setStopped(true);
-      onClose;
+      onClose();
     })
     .method('drawBackground', (s) => {
       if (s.my.stopped) {
@@ -305,7 +373,6 @@ export default ({
         });
 
       s.do.drawDots();
-      s.do.scan(true);
     })
     .method('drawDots', (s) => {
       const matrix = s.do.sectorMatrix();
@@ -363,12 +430,6 @@ export default ({
     .method('listenToClicks', (s) => {
       s.my.sectorCtr.interactiveChildren = true;
       s.my.app.stage.interactiveChildren = true;
-      /*      console.log('----listenToClicks');
-      s.my.backGraphic.interactive = true;
-      s.my.backGraphic.buttonMode = true;
-      s.my.backGraphic.on('pointerdown', (e) => {
-        console.log('background  --- pointerdown:', e);
-      }); */
     })
     .method('chosenGalaxyChange', (s, to, prev) => {
       if (!to) {
@@ -436,7 +497,7 @@ export default ({
         .endFill();
     })
     .method('divide', (s) => {
-      axios.get(divideUrl(s.my.galaxy))
+      axios.get(divideUrl(s.my.sector))
         .then(({ data }) => {
           s.do.updateSectors(data);
           s.do.setSectorsLoaded(true);
@@ -454,10 +515,6 @@ export default ({
   stream.on('resizeApp', 'drawBackground');
   stream.on('resizeApp', (s) => s.do.scan(true));
   stream.watch('sectorsLoaded', 'checkSectors');
-  stream.on('resizeApp', (s) => {
-    console.log('resizing app');
-    stream.do.scan(true);
-  });
 
   stream.on('scanAngle', 'sizeSectors');
   stream.watchFlat('chosenGalaxy', 'chosenGalaxyChange');
