@@ -73,8 +73,12 @@ export default ({ size, history }) => {
   stream
     .property('sector', null)
     .property('galaxy', null)
+    .method('closeGalaxy', (s) => {
+      console.log('---- closing galaxy');
+      s.do.setGalaxy(null);
+    })
     .method('chooseGalaxy', (s, galaxy) => {
-      this.do.setGalaxy(galaxy);
+      s.do.setGalaxy(galaxy);
     })
     .method('zoom', (s) => {
       s.do.setSpeed(0);

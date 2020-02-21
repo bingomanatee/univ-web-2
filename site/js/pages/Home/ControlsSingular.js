@@ -38,14 +38,17 @@ class SvgControlsSingular extends PureComponent {
   }
 
   zoomOver() {
-    this.setState({ zoomHover: true }, this.incZoom);
+    if (this.mounted) {
+      this.setState({ zoomHover: true }, this.incZoom);
+    }
   }
 
   zoomOut() {
-    this.setState({ zoomHover: false });
+    if (this.mounted) this.setState({ zoomHover: false });
   }
 
   incZoom() {
+    if (!this.mounted) return;
     if (this.state.zoomHover) {
       const lastZoomed = Date.now() - this.state.lastZoomTime;
       if (lastZoomed >= ZOOM_DELAY) {
@@ -131,6 +134,14 @@ class SvgControlsSingular extends PureComponent {
 
   speedFill(speed) {
     return (this.props.speed >= speed) ? SPEED_FILL_ACTIVE : SPEED_FILL;
+  }
+
+  componentDidMount() {
+    this.mounted = true;
+  }
+
+  componentWillUnmount() {
+    this.mounted = false;
   }
 
   render() {

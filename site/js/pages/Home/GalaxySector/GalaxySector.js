@@ -18,6 +18,15 @@ const Frame = styled.section`
 width: 100%;
 height: 100%;
 position: relative;
+  h2 {
+  position: absolute;
+  left: auto;
+  right: auto;
+  top: 3rem;
+  font-size: 1rem;
+  text-align: center;
+  width: 100%;
+  }
 `;
 
 const FrameItem = styled.div`
@@ -65,11 +74,29 @@ export default class GalaxySector extends Component {
         this.stream.do.resizeApp(this.size);
       }
     }
+
+    if (prevProps.galaxy !== this.props.galaxy) {
+      console.log('galaxy sector: galaxy changed to ', this.props.galaxy);
+      if (this.stream) {
+        this.stream.do.setGalaxy(this.props.galaxy);
+      }
+    }
   }
 
   render() {
+    const { targetZoomState, zoomState, zoomTransLevel } = this.state;
     return (
-      <Frame active={1} anchor="center" fill id="galaxy-stack">
+      <Frame active={1} anchor="center" id="galaxy-stack">
+        <h2>
+          Galaxy Sector:
+          {targetZoomState}
+          from
+          {' '}
+          {zoomState}
+          {' '}
+          : level
+          {zoomTransLevel}
+        </h2>
         <FrameItem>
           <Main transparent ref={this._ref} />
         </FrameItem>

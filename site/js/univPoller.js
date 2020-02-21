@@ -35,7 +35,6 @@ async function loadUniv(params) {
     }
   }
 
-  console.log('loadUniv: loading', params);
   loading = true;
   const { data } = await axios.get(getU(x, y, range));
   postMessage({
@@ -51,13 +50,13 @@ async function loadUniv(params) {
   }
 }
 
-self.addEventListener('message', ({ data }) => {
-  if (data.message === 'load') {
-    loadUniv(data);
-  } else {
-    console.log('worker event listener: ignoring ', data);
-  }
-});
+if (typeof self !== 'undefined') {
+  self.addEventListener('message', ({ data }) => {
+    if (data.message === 'load') {
+      loadUniv(data);
+    } else {
+      console.log('worker event listener: ignoring ', data);
+    }
+  });
 
-
-console.log('univPoller .... loaded');
+}

@@ -22,7 +22,8 @@ const SCANNER_COLOR = BACKGROUND_LINE;
 const SECTOR_COLOR = chroma(255, 225, 200).num();
 const SCANNER_ROTATION_SPEED = 0.05;
 const SCANNER_ALPHA = 0.25;
-const TRANS_LENGTH = 800;
+console.log('node env: ', process.env.NODE_ENV);
+const TRANS_LENGTH = process.env.NODE_ENV === 'test' ? 200 : 800;
 const TRANS_LINE_COLOR = chroma(204, 204, 255).num();
 const TRANS_FILL_COLOR = chroma(0, 0, 0).num();
 
@@ -67,17 +68,21 @@ const ci = (n) => _N(n).round().clamp(0, 1).value;
 
 /* ---------------- FACTORY ----------------- */
 
-export default ({ size, sector, onClose, onGalaxy }) => {
+export default ({
+  size, sector, onClose, galaxy, onGalaxy,
+}) => {
   const stream = pixiStreamFactory({ size });
-  stream.name = 'galaxyStore';
+  stream.name = 'sectorStore';
+
+  console.log('-------------------------------------- galaxy sector created', galaxy);
 
   stream.property('sector', sector)
     .property('galaxyStars', null)
-    .property('chosenGalaxy', false)
+    .property('galaxy', galaxy || null)
     .property('galaxyParts', [], 'array')
     .method('chooseGalaxy', (s, galaxySector) => {
-      s.do.setChosenGalaxy(galaxySector);
-      onGalaxy(galaxySector);
+      console.log('choosed galaxy:', galaxySector);
+      s.do.setGalaxy(galaxySector);
     }, true)
     .property('sectors', [], 'array')
     .property('sectorCtr', null)
@@ -88,7 +93,7 @@ export default ({ size, sector, onClose, onGalaxy }) => {
     })
     .method('sectorMatrix', (s) => {
       /**
-       * This matrix is calibrated to screen space, for a sctor
+       * This matrix is calibrated to screen space, for a sector
        * @type {number}
        */
       const scale = s.do.backRadius() / SUBSECTOR_DIV;
@@ -114,7 +119,7 @@ export default ({ size, sector, onClose, onGalaxy }) => {
     })
     .method('drawSectors', (s) => {
       s.my.sectorCtr.removeChildren();
-      if (s.my.chosenGalaxy) {
+      if (s.my.galaxy) {
         return;
       }
       const matrix = s.do.sectorMatrix();
@@ -208,53 +213,6 @@ export default ({ size, sector, onClose, onGalaxy }) => {
           s.my.sectorCtr.addChild(g);
         }
       });
-    })
-    .method('pollStars', (s) => {
-      const stars = [];
-      s.my.galaxyStars.forEach((sector) => {
-        if (sector.stars > 0) {
-          stars.push(sector.stars);
-        }
-      });
-
-      return { mean: mean(stars), dev: standardDeviation(stars), max: _.max(stars) };
-    })
-    .method('drawStars', (s) => {
-      if (!s.my.galaxyStars) {
-        return;
-      }
-      const matrix = s.do.starSectorMatrix();
-
-      s.my.starCtr.removeChildren();
-
-      // eslint-disable-next-line prefer-const
-      let graphic = new PIXI.Graphics();
-      s.my.starCtr.addChild(graphic);
-      const stat = s.do.pollStars();
-      let count = 0;
-      console.log('star max: ', stat.max, 'mean', stat.mean, 'dev: ', stat.dev, 'radius scale:', matrix.scale);
-      const densityGradient = gradient();
-      console.log('gradient:', densityGradient);
-      s.my.galaxyStars.forEach((sector) => {
-        const opacity = _N(sector.stars).div(stat.max)
-          .clamp(0, 1).value;
-        const color = densityGradient.rgbAt(opacity);
-        const crColor = chroma(color.toRgbString()).num();
-
-        const { x, y } = sector.coord.toXY(matrix);
-
-        //  console.log('sector', sector.x, sector.y, 'opacity: ', opacity);
-
-        graphic.beginFill(crColor, 1)
-          .drawCircle(x, y, matrix.scale / 2)
-          .endFill();
-        if (++count > 50) {
-          s.my.starCtr.addChild(graphic);
-          graphic = new PIXI.Graphics();
-          count = 0;
-        }
-      });
-      s.my.starCtr.addChild(graphic);
     })
     .method('sizeSectors', (s, angle) => {
       const matrix = s.do.sectorMatrix();
@@ -432,12 +390,18 @@ export default ({ size, sector, onClose, onGalaxy }) => {
       s.my.app.stage.interactiveChildren = true;
     })
     .method('chosenGalaxyChange', (s, to, prev) => {
+      console.log('========= chosenGalaxyChange', to, 'from', prev);
       if (!to) {
         if (prev) {
           s.do.closeGalaxy();
+        } else {
+          console.log('cdc - null to null;');
         }
       } else if (!prev) {
+        console.log('opening galaxy');
         s.do.openGalaxy();
+      } else {
+        console.log('previous galaxy was ', prev, 'is now ', to);
       }
     })
     .property('zoomState', 'closed', 'string')
@@ -449,21 +413,38 @@ export default ({ size, sector, onClose, onGalaxy }) => {
       }
     })
     .method('closeGalaxy', (s) => {
+      console.log('closeGalaxy: galaxySector');
       s.do.setTargetZoomState('closed');
     })
     .method('openGalaxy', (s) => {
+      console.log('======= openGalaxy: galaxySector', s.my.galaxy, 'from targetZoomState', s.my.targetZoomState);
+      const sub = s._changes.subscribe((data) => {
+        console.log('openGalaxy _changes: ', data.name, data.value, data.prev);
+      });
+
       s.do.setTargetZoomState('open');
+      console.log('======= to ... targetZoomState', s.my.targetZoomState);
+      requestAnimationFrame(() => {
+        sub.unsubscribe();
+      });
     })
     .watchFlat('targetZoomState', (s, to, prev) => {
-      if (to !== prev && to !== s.my.zoomState) {
+      console.log(' >>>>>>>>>>>>>>>>>> watchFlat.targetZoomState to ', to, 'from', prev, '; zoomState is ', s.my.zoomState);
+      if (to !== s.my.zoomState) {
         s.do.transition(true);
+      } else {
+        console.log('targetZoomState: no transition -- ', to, prev, 'zoomState = ', s.my.zoomState);
       }
     })
     .property('transTime', 0, 'number')
     .method('transition', (s, init = false) => {
       if (init) {
+        console.log('transition to ', s.my.targetZoomState, 'from', s.my.zoomState, 'transLevel = ', s.my.zoomTransLevel);
         s.do.setTransTime(Date.now());
+      } else {
+        // console.log('transitioning .... ', s.my.zoomTransLevel);
       }
+
       if (s.my.targetZoomState === s.my.zoomState) {
         s.do.setZoomTransLevel(s.my.zoomState === 'closed' ? 0 : 1);
       } else {
@@ -478,10 +459,17 @@ export default ({ size, sector, onClose, onGalaxy }) => {
       if (s.my.targetZoomState === 'closed') {
         if (s.my.zoomTransLevel > 0) {
           requestAnimationFrame(() => s.do.transition());
+        } else {
+          s.do.setZoomState('closed');
+          s.do.setGalaxy(null);
+          onGalaxy(null);
         }
       } else if (s.my.targetZoomState === 'open') {
         if (s.my.zoomTransLevel < 1) {
           requestAnimationFrame(() => s.do.transition());
+        } else {
+          s.do.setZoomState('open');
+          onGalaxy(s.my.galaxy);
         }
       }
     })
@@ -497,28 +485,38 @@ export default ({ size, sector, onClose, onGalaxy }) => {
         .endFill();
     })
     .method('divide', (s) => {
-      axios.get(divideUrl(s.my.sector))
-        .then(({ data }) => {
-          s.do.updateSectors(data);
-          s.do.setSectorsLoaded(true);
-          s.do.drawBackground();
-        })
-        .catch((err) => {
-          console.log('error in getting data:', err);
-          s.do.setSectorsLoadError(err);
-        });
+      if (process.env.NODE_ENV === 'test') {
+        s.updateSectors([]);
+      } else {
+        // note = NOT waiting for data to come back.
+        axios.get(divideUrl(s.my.sector))
+          .then(({ data }) => {
+            s.do.updateSectors(data);
+            s.do.setSectorsLoaded(true);
+            s.do.drawBackground();
+            s.do.scan(true);
+          })
+          .catch((err) => {
+            console.log('error in getting data:', err);
+            s.do.setSectorsLoadError(err);
+          });
+      }
     });
 
-  stream.on('initApp', 'drawBackground');
-  stream.on('initApp', (s) => s.do.scan(true));
+  stream.on('initApp', (s) => {
+    s.do.initAnchor();
+    s.do.divide();
+  });
   stream.on('resizeApp', 'drawSectors');
   stream.on('resizeApp', 'drawBackground');
   stream.on('resizeApp', (s) => s.do.scan(true));
   stream.watch('sectorsLoaded', 'checkSectors');
+  stream.watchFlat('sector', (s, sector, last) => {
+    console.log('sector set to ', sector, 'from', last);
+  });
 
   stream.on('scanAngle', 'sizeSectors');
-  stream.watchFlat('chosenGalaxy', 'chosenGalaxyChange');
+  stream.watchFlat('galaxy', 'chosenGalaxyChange');
 
-  stream.do.divide();
   return stream;
 };

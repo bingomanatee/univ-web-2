@@ -130,12 +130,12 @@ export class GalaxySpiral {
       .div(2)
       .max(0)
       .times(this.density);
-
+    /*
     if (!(sector.x % 10 || sector.y % 10)) {
       console.log('point:', aX, aY, 'angle: ', angle.round().value);
       console.log('sin is ', sin.value, 'rel distance', relDistance, 'midPeak:', midPeak.value);
       console.log('radial density: ', radialDensity.value);
-    }
+    } */
 
     return radialDensity.minus(0.3).max(0).value;
   }
@@ -154,7 +154,7 @@ GalaxySpiral.random = (diam, density = 0.8) => {
   const x = _.random(-diam / 10, diam / 10, true);
   const y = _.random(-diam / 10, diam / 10, true);
   const discDiameter = _N(diam).sub(_N(x).abs().max(_N(y).abs())).value;
-  const spin = _([-1,1]).shuffle().first();
+  const spin = _([-1, 1]).shuffle().first();
   console.log('galaxy spiral random diameter: ', diam, 'discDiameter: ', discDiameter);
   return new GalaxySpiral({
     arms: _.random(5, 8),

@@ -4,6 +4,7 @@ import styled from 'styled-components';
 import homeStore from './home.store-diamond';
 import Controls from './ControlsSingular';
 import GalaxySector from './GalaxySector';
+import Galaxy from './Galaxy';
 import { Main } from '../../views/Main';
 
 const Frame = styled.section`
@@ -80,6 +81,7 @@ export default class Home extends Component {
           {sector ? (
             <GalaxySector
               size={this.props.size}
+              galaxy={galaxy}
               sector={sector}
               centerHex={centerHex}
               onGalaxy={this.stream.do.chooseGalaxy}
@@ -104,6 +106,7 @@ export default class Home extends Component {
               size={this.props.size}
               sector={sector}
               galaxy={galaxy}
+              onClose={this.stream.do.closeGalaxy}
             />
           </FrameItem>
         ) : ''}

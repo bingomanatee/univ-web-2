@@ -3,8 +3,10 @@ import styled from 'styled-components';
 import { Box, Button, Stack } from 'grommet';
 
 import galaxyStore from './galaxy.store';
+import galaxyControlStore from './galaxy.control.store';
 import { Main } from '../../../views/Main';
 import SvgOut from '../../../views/icons/Out';
+import PartControl from './PartControl';
 
 const ButtonWrapper = styled.div`
 position: absolute;
@@ -18,6 +20,15 @@ const Frame = styled.section`
 width: 100%;
 height: 100%;
 position: relative;
+  h2 {
+  position: absolute;
+  left: auto;
+  right: auto;
+  top: 1rem;
+  font-size: 1rem;
+  text-align: center;
+  width: 100%;
+  }
 `;
 
 const FrameItem = styled.div`
@@ -34,24 +45,30 @@ export default class Galaxy extends Component {
   constructor(p) {
     super(p);
     this._ref = React.createRef();
+    this._overlayRef = React.createRef();
     this.stream = galaxyStore(p);
+    this.controlStream = galaxyControlStore(this.stream, p.size);
     this.state = this.stream.value;
   }
 
   componentDidMount() {
+    this.mounted = true;
     this._sub = this.stream.subscribe((s) => {
-      this.setState(s.toObject());
+      if (this.mounted) {
+        this.setState(s.value);
+      }
     }, (e) => {
       console.log('-stream error: ', e);
     });
 
-    console.log('componentDidMount --- local');
     const ele = this._ref.current;
-    console.log('component did mount: ele', ele);
+
     this.stream.do.tryInit(ele, this.props.size);
+    this.controlStream.do.tryInit(this._overlayRef.current, this.props.size);
   }
 
   componentWillUnmount() {
+    this.mounted = false;
     this.stream.do.setStopped(true);
     this._sub.unsubscribe();
   }
@@ -69,9 +86,16 @@ export default class Galaxy extends Component {
 
   render() {
     return (
-      <Frame active={1} anchor="center" fill id="galaxy-stack">
+      <Frame active={1} anchor="center" id="galaxy-stack">
+        <h2>
+          Galaxy sector
+          {this.props.sector.toString()}
+        </h2>
         <FrameItem>
           <Main transparent ref={this._ref} />
+        </FrameItem>
+        <FrameItem>
+          <Main transparent ref={this._overlayRef} />
         </FrameItem>
         <ButtonWrapper>
           <SvgOut onClick={this.stream.do.close} />

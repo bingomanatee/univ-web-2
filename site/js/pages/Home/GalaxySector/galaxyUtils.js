@@ -130,12 +130,12 @@ export class GalaxySpiral {
       .div(2)
       .max(0)
       .times(this.density);
-
+/*
     if (!(sector.x % 10 || sector.y % 10)) {
       console.log('point:', aX, aY, 'angle: ', angle.round().value);
       console.log('sin is ', sin.value, 'rel distance', relDistance, 'midPeak:', midPeak.value);
       console.log('radial density: ', radialDensity.value);
-    }
+    }*/
 
     return radialDensity.minus(0.3).max(0).value;
   }
