@@ -17,6 +17,11 @@ const PART_AXIS_COLOR = chroma(153, 0, 20).num();
 const DENSITY_COLOR = chroma(153, 153, 153).num();
 const DENSITY_SELECT_COLOR = chroma(255, 153, 0).num();
 
+let imgResources;
+PIXI.Loader.shared.load((loader, resources) => {
+  imgResources = resources;
+});
+
 export default (galaxyStream, size) => {
   const stream = pixiStreamFactory({ size })
     .property('galaxyParts', [], 'array')
@@ -118,16 +123,27 @@ export default (galaxyStream, size) => {
       }
     })
     .watch('activePartIndex', 'drawActivePart')
-    .method('drawButton', (s, part, color) => {
+    .method('drawButton', (s, part, color, offset) => {
       if (!part.buttonGraphic) {
         return;
       }
       part.buttonGraphic.clear();
+
+      console.log('imageResources:', imgResources, 'iconType: ', part.iconType);
+
       part.buttonGraphic.beginFill(color)
         .drawCircle(0, s.do.radius(), s.do.discRadius())
-        .endFill();
+        .endFill()
+        .drawRect(-24, s.do.radius() - 24, 48, 48);
 
       s.my.buttonAnchor.addChild(part.buttonGraphic);
+      const sprite = new PIXI.Sprite(imgResources[part.iconType].texture);
+      sprite.x = -24;
+      sprite.y = s.do.radius() - 24;
+      const container = new PIXI.Container();
+      container.addChild(sprite);
+      container.angle = 180 + (offset - s.my.galaxyParts.length / 2 + 0.5) * s.do.distAngle();
+      s.my.buttonAnchor.addChild(container);
     })
     .method('radius', (s) => galaxyStream.do.backRadius())
     .method('discRadius', (s) => s.do.radius() / 12)
@@ -148,7 +164,7 @@ export default (galaxyStream, size) => {
       });
       s.do.drawButtons();
     })
-    .method('densityRadius', (s) => s.do.discRadius() * 0.8)
+    .method('densityRadius', (s) => s.do.discRadius() * 0.5)
     .method('densityAngle', (s) => _N(Math.atan2(s.do.densityRadius() * 2, s.do.radius())).deg().value)
     .method('densityDisplayButton', (s, offset) => {
       const graphic = new PIXI.Graphics();
@@ -162,31 +178,14 @@ export default (galaxyStream, size) => {
     })
     .method('densityButton', (s, density, offset) => {
       const graphic = new PIXI.Graphics();
-      const r = s.do.densityRadius();
-      const dr = s.do.radius();
 
-      graphic.beginFill(DENSITY_COLOR)
+      const c = _N(255).times(density).div(100).round().clamp(0, 255).value;
+      const color = chroma(c, c, c).num();
+      graphic.beginFill(color)
         .drawCircle(0, s.do.radius(), s.do.densityRadius())
         .endFill();
 
-      const RES = 6;
-      _.range(-r, r, RES).forEach((x, xi) => {
-        _.range(-r, r, RES).forEach((y, yi) => {
-          if (_N(x).pow(2).plus(y ** 2).sqrt().value > r) {
-            return;
-          }
-          if (Math.random() * 100 > density) {
-            return;
-          }
-
-          graphic.beginFill(WHITE)
-            .drawCircle(x, y + dr, RES / 3)
-            .endFill();
-        });
-      });
-
-
-      graphic.lineStyle(6, BLACK, 1, 0)
+      graphic.lineStyle(6, DENSITY_COLOR, 1, 0)
         .drawCircle(0, s.do.radius(), s.do.densityRadius())
         .endFill();
 
@@ -207,6 +206,12 @@ export default (galaxyStream, size) => {
         });
       }
     })
+    .method('updateDensity', (s, val) => {
+      const part = s.do.activePart();
+      if (part) {
+        galaxyStream.do.updatePartDensity(part, val);
+      }
+    })
     .method('drawDensityButtons', (s) => {
       if (!s.my.densityAnchor) {
         return;
@@ -215,7 +220,7 @@ export default (galaxyStream, size) => {
 
       const densityDisplayButtons = [];
       s.my.densityAnchor.removeChildren();
-      _.range(0, 101, 10).forEach((density, i) => {
+      _.range(0, 101, 5).forEach((density, i) => {
         const button = s.do.densityButton(density, i);
         button.interactive = true;
         const val = _N(density).div(100).clamp(0, 100).value;
@@ -241,7 +246,7 @@ export default (galaxyStream, size) => {
           color = BUTTON_OVER_COLOR;
         }
 
-        s.do.drawButton(part, color);
+        s.do.drawButton(part, color, i);
       });
     })
     .method('drawParts', (s) => {
@@ -259,6 +264,7 @@ export default (galaxyStream, size) => {
       console.log('gcs:  galaxy parts are ', parts);
       s.do.setGalaxyParts(parts);
       s.do.drawParts();
+      s.do.drawDensityButtons();
     });
 
   stream.on('initApp', (s) => {
@@ -270,7 +276,7 @@ export default (galaxyStream, size) => {
 
   stream.name = 'galaxyControlStore';
 
-  galaxyStream.watchFlat('galaxyParts', (s, parts) => {
+  const sub = galaxyStream.watchFlat('galaxyParts', (s, parts) => {
     stream.do.updateGalaxyParts(parts);
   });
 
@@ -282,6 +288,6 @@ export default (galaxyStream, size) => {
 
   stream.subscribe(false, (e) => {
     console.log('error in stream:', e);
-  });
+  }, () => sub.unsubscribe());
   return stream;
 };

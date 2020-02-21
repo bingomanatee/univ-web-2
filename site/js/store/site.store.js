@@ -1,4 +1,4 @@
-import { ValueStream } from '@wonderlandlabs/looking-glass-engine';
+import {ValueStream} from '@wonderlandlabs/looking-glass-engine';
 import * as PIXI from 'pixi.js';
 import _ from 'lodash';
 
@@ -34,7 +34,12 @@ const SiteStore = new ValueStream('siteStore')
 if (process.env.NODE_ENV !== 'test') {
   function setup() {
     SiteStore.do.setGalaxySheet(PIXI.Loader.shared.resources['/img/galaxies.json'].spritesheet);
+    PIXI.Loader.shared.add('icon-spiral', '/img/icon-spiral.png');
+    PIXI.Loader.shared.add('icon-noise', '/img/icon-noise.png');
+    PIXI.Loader.shared.add('icon-radial', '/img/icon-radial.png');
   }
+
   PIXI.Loader.shared.add('/img/galaxies.json').load(setup);
 }
+
 export default SiteStore;

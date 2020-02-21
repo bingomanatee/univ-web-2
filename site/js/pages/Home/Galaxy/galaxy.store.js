@@ -54,6 +54,7 @@ export default ({
   stream
     .property('galaxyStars', null)
     .property('chosenGalaxy', galaxy)
+    .property('gradient', gradient())
     .property('galaxyParts', [], 'array')
     .method('initGalaxyStars', (s) => {
       s.do.setGalaxyParts([]);
@@ -84,10 +85,17 @@ export default ({
       s.do.distributeStars();
       s.do.drawStars();
     }, true)
+    .method('updatePartDensity', (s, part, density) => {
+      part.density = density;
+      s.do.setGalaxyParts(s.my.galaxyParts);
+      s.do.distributeStars();
+      s.do.drawStars();
+    })
     .method('updatePartPos', (s, part, x, y) => {
       part.x = x;
       part.y = y;
 
+      s.do.setGalaxyParts(s.my.galaxyParts);
       s.do.distributeStars();
       s.do.drawStars();
     })
@@ -120,6 +128,7 @@ export default ({
             // no longer normalizing star density
             */
           sector.stars = _N(sector.starDensity).clamp(0, 1).times(maxStars).round().value;
+          sector.maxStars = maxStars;
           // console.log(sector.x, ',', sector.y, 'density: ', sector.starDensity, 'stars', sector.stars);
         }
       });
@@ -174,13 +183,10 @@ export default ({
         .endFill();
 
       s.my.starCtr.addChild(graphic);
-      const stat = s.do.pollStars();
       let count = 0;
-      console.log('star max: ', stat.max, 'mean', stat.mean, 'dev: ', stat.dev, 'radius scale:', matrix.scale);
-      const densityGradient = gradient();
+      const densityGradient = s.my.gradient;
       s.my.galaxyStars.forEach((sector) => {
-        const opacity = _N(sector.stars).div(stat.max)
-          .clamp(0, 1).value;
+        const opacity = _N(sector.starDensity).clamp(0, 1).value;
         const color = densityGradient.rgbAt(opacity);
         const crColor = chroma(color.toRgbString()).num();
 

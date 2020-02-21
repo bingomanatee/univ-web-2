@@ -35,26 +35,11 @@ export class StarDisc {
       .sqrt();
 
     const relDistance = dist.div(this.diameter).value;
-    /*    if (!((sector.x % 10) || (sector.y % 10))) {
-      console.log('===================== refDiameter:', numberFormat(this.diameter, '0,0', { thousandsDelimeter: ',' }));
-      console.log('sector diameter', numberFormat(sector.diameter, '0,0', { thousandsDelimeter: ',' }));
-      console.log('refDiameter/sector.diameter', this.diameter / sector.diameter);
-      console.log('relative distance', numberFormat(relDistance, '0.000'));
-
-      console.log('x: ', numberFormat(this.x, '0,0', { thousandsDelimeter: ',' }));
-      console.log('y: ', numberFormat(this.y, '0,0', { thousandsDelimeter: ',' }));
-      console.log('x% of diameter: ', pc(this.x / this.diameter));
-      console.log('y% of diameter: ', pc(this.y / this.diameter));
-      console.log('px: ', numberFormat(p.x, '0,0', { thousandsDelimeter: ',' }));
-      console.log('py: ', numberFormat(p.y, '0,0', { thousandsDelimeter: ',' }));
-      console.log('px% of diameter: ', pc(p.x / this.diameter));
-      console.log('py% of diameter: ', pc(p.y / this.diameter));
-    } */
 
     if (dist.value > this.diameter) {
       return 0;
     }
-    return (1 - relDistance) ** 1.5;
+    return this.density * (1 - relDistance) ** 1.5;
   }
 }
 
@@ -62,6 +47,7 @@ proppify(StarDisc)
   .addProp('x', 0, 'number')
   .addProp('y', 0, 'number')
   .addProp('density', 1, 'number')
+  .addProp('iconType', 'icon-radial')
   .addProp('diameter', 1, 'number');
 
 StarDisc.random = (diam, density = 0.25) => {
@@ -146,6 +132,7 @@ proppify(GalaxySpiral)
   .addProp('y', 0, 'number')
   .addProp('density', 1, 'number')
   .addProp('diameter', 1, 'number')
+  .addProp('iconType', 'icon-spiral')
   .addProp('arms', 5, 'number')
   .addProp('spin', 1, 'number')
   .addProp('twirls', 1, 'number');
@@ -187,13 +174,17 @@ export class GalaxyNoise {
     const matrix = new Hexes({ scale: sector.diameter * 2, pointy: true });
     const p = sector.coord.toXY(matrix);
 
-    return _N(this.noise.noise2D(this.scaleDim(p.x), this.scaleDim(p.y))).minus(1).div(2).times(this.density).value;
+    return _N(this.noise.noise2D(this.scaleDim(p.x), this.scaleDim(p.y)))
+      .minus(1).div(2).times(this.density)
+      .clamp(-1, 0).value;
   }
 }
 
 
 proppify(GalaxyNoise)
   .addProp('scale', 40, 'number')
+  .addProp('iconType', 'icon-noise')
+  .addProp('density', 1, 'number')
   .addProp('diameter', 0, 'number');
 
 GalaxyNoise.random = (diameter, scale = 40, density = 0.15) => new GalaxyNoise({

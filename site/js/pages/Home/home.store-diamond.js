@@ -167,7 +167,13 @@ export default ({ size, history }) => {
       return Math.max(20, Math.ceil(maxSize / PX_PER_HEX));
     })
     .method('centerHex', (s) => matrix.nearestHex(-s.my.offsetX, -s.my.offsetY))
+    .property('firstLoad', false, 'boolean')
     .method('updateUniverseData', (s, cells, depth = 0) => {
+      if (!s.my.firstLoad) {
+        s.do.setDiamonds(new Map());
+        s.my.hexContainer.removeChildren();
+        s.do.setFirstLoad(true);
+      }
       cells.forEach((cell) => {
         const count = new GalaxyCount(cell, matrix, depth);
         s.my.universeData.set(count.id, count);

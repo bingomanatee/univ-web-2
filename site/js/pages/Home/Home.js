@@ -70,36 +70,39 @@ export default class Home extends Component {
 
   render() {
     const {
-      sector, arrows, speed, centerHex, galaxy,
+      sector, arrows, speed, centerHex, galaxy, firstLoad,
     } = this.state;
     return (
       <Frame>
         <FrameItem>
-          <Main ref={this._ref} />
+          <Main id="galaxy-display" ref={this._ref} />
         </FrameItem>
-        <FrameItem>
-          {sector ? (
-            <GalaxySector
-              size={this.props.size}
-              galaxy={galaxy}
-              sector={sector}
-              centerHex={centerHex}
-              onGalaxy={this.stream.do.chooseGalaxy}
-              onClose={this.stream.do.closeSector}
-            />
-          ) : (
-            <Controls
-              arrows={arrows}
-              speed={speed}
-              onArrowOut={this.stream.do.onArrowOut}
-              onArrowOver={this.stream.do.onArrowOver}
-              onArrowDown={this.stream.do.onArrowDown}
-              setSpeed={this.stream.do.updateSpeed}
-              zoom={this.stream.do.zoom}
-              stream={this.stream}
-            />
-          )}
-        </FrameItem>
+        {firstLoad
+          ? (
+            <FrameItem>
+              {sector ? (
+                <GalaxySector
+                  size={this.props.size}
+                  galaxy={galaxy}
+                  sector={sector}
+                  centerHex={centerHex}
+                  onGalaxy={this.stream.do.chooseGalaxy}
+                  onClose={this.stream.do.closeSector}
+                />
+              ) : (
+                <Controls
+                  arrows={arrows}
+                  speed={speed}
+                  onArrowOut={this.stream.do.onArrowOut}
+                  onArrowOver={this.stream.do.onArrowOver}
+                  onArrowDown={this.stream.do.onArrowDown}
+                  setSpeed={this.stream.do.updateSpeed}
+                  zoom={this.stream.do.zoom}
+                  stream={this.stream}
+                />
+              )}
+            </FrameItem>
+          ) : ''}
         { galaxy ? (
           <FrameItem>
             <Galaxy

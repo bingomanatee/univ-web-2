@@ -61,6 +61,7 @@ export class StarDisc {
 proppify(StarDisc)
   .addProp('x', 0, 'number')
   .addProp('y', 0, 'number')
+  .addProp('iconType', 'icon-radial')
   .addProp('density', 1, 'number')
   .addProp('diameter', 1, 'number');
 
@@ -147,6 +148,7 @@ proppify(GalaxySpiral)
   .addProp('density', 1, 'number')
   .addProp('diameter', 1, 'number')
   .addProp('arms', 5, 'number')
+  .addProp('iconType', 'icon-spiral')
   .addProp('spin', 1, 'number')
   .addProp('twirls', 1, 'number');
 
@@ -194,6 +196,7 @@ export class GalaxyNoise {
 
 proppify(GalaxyNoise)
   .addProp('scale', 40, 'number')
+  .addProp('iconType', 'icon-noise')
   .addProp('diameter', 0, 'number');
 
 GalaxyNoise.random = (diameter, scale = 40, density = 0.15) => new GalaxyNoise({
