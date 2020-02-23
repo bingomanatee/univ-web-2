@@ -10,7 +10,7 @@ import { standardDeviation, mean } from 'simple-statistics';
 import pixiStreamFactory from '../../../store/pixiStreamFactory';
 import { LY_PER_HEX, SUBSECTOR_DIV, STAR_DIV } from '../../../util/constants';
 import siteStore from '../../../store/site.store';
-import { StarDisc, GalaxyNoise, GalaxySpiral } from './galaxyUtils';
+import { StarDisc, GalaxyNoise, GalaxySpiral } from './galaxyParts';
 
 const densityGradientBlue = tinygradient([
   chroma(10, 10, 10).css(),

@@ -26,8 +26,9 @@ export default (galaxyStream, size) => {
   const stream = pixiStreamFactory({ size })
     .property('galaxyParts', [], 'array')
     .property('anchor', null)
-    .property('buttonAnchor', null)
-    .property('partAnchor', null)
+    .property('partTabAnchor', null)
+    .property('partAxisAnchor', null)
+    .property('partRadiusAnchor', null)
     .property('densityAnchor', null)
     .method('centerAnchor', (s) => {
       if (s.my.anchor) {
@@ -40,12 +41,14 @@ export default (galaxyStream, size) => {
       }
       console.log('gcs ... defining anchor');
       s.do.setAnchor(new PIXI.Container());
-      s.do.setButtonAnchor(new PIXI.Container());
+      s.do.setPartTabAnchor(new PIXI.Container());
       s.do.setDensityAnchor(new PIXI.Container());
-      s.do.setPartAnchor(new PIXI.Container());
-      s.my.anchor.addChild(s.my.buttonAnchor);
-      s.my.anchor.addChild(s.my.partAnchor);
+      s.do.setPartAxisAnchor(new PIXI.Container());
+      s.do.setPartRadiusAnchor(new PIXI.Container());
+      s.my.anchor.addChild(s.my.partTabAnchor);
+      s.my.anchor.addChild(s.my.partAxisAnchor);
       s.my.anchor.addChild(s.my.densityAnchor);
+      s.my.anchor.addChild(s.my.partRadiusAnchor);
       s.my.app.stage.addChild(s.my.anchor);
       s.do.centerAnchor();
     })
@@ -62,65 +65,106 @@ export default (galaxyStream, size) => {
       }
       return (s.my.activePartIndex >= 0) ? s.my.galaxyParts[s.my.activePartIndex] || null : null;
     })
+    .property('partAxisContainer', null)
+    .method('makeDraggable', (s, graphics, onChange, onDone) => {
+      graphics.interactive = true;
+      let dragStart = null;
+      let currentPos = { x: graphics.x, y: graphics.y };
+      let dragStartPos = null;
+
+      const startDrag = (e) => {
+        dragStart = e.data;
+        dragStartPos = dragStart.getLocalPosition(graphics.parent);
+      };
+      const drag = () => {
+        if (dragStart) {
+          const dragPos = dragStart.getLocalPosition(graphics.parent);
+          graphics.x = dragPos.x - dragStartPos.x + currentPos.x;
+          graphics.y = dragPos.y - dragStartPos.y + currentPos.y;
+          if (onChange && _.isFunction(onChange)) {
+            onChange(currentPos);
+          }
+        }
+      };
+      const stopDrag = () => {
+        dragStart = null;
+        currentPos = { x: graphics.x, y: graphics.y };
+        if (onDone && _.isFunction(onDone)) {
+          onDone(currentPos);
+        }
+      };
+
+      graphics.on('mousedown', startDrag);
+      graphics.on('mousemove', drag);
+      graphics.on('mouseup', stopDrag);
+
+      return graphics;
+    })
+    .method('lyToPx', (s) => _N(s.do.radius()).div(galaxyStream.my.chosenGalaxy.d).value)
+    .method('makeCenterButton', (s, part) => {
+      const graphics = new PIXI.Graphics();
+
+      const PART_AXIS_RADIUS = s.do.radius() / 20;
+
+      graphics.beginFill(PART_DISC_COLOR, 0.25)
+        .drawCircle(0, 0, PART_AXIS_RADIUS * 1.1)
+        .endFill();
+      graphics.lineStyle(4, PART_AXIS_COLOR, 0.75)
+        .moveTo(-PART_AXIS_RADIUS, 0)
+        .lineTo(PART_AXIS_RADIUS, 0)
+        .moveTo(0, PART_AXIS_RADIUS)
+        .lineTo(0, -PART_AXIS_RADIUS);
+
+      const scale = s.do.lyToPx();
+
+      graphics.x = scale * (part.x || 0);
+      graphics.y = scale * (part.y || 0);
+
+      const onDone = ({ x, y }) => {
+        galaxyStream.do.updatePartPos(part, x / scale, y / scale);
+        s.do.redrawRadius(part);
+      };
+
+      const onMove = () => {
+        const radGraphic = s.my.radiusContainer.getChildAt(0)
+        if (radGraphic){
+          radGraphic.x = graphics.x;
+          radGraphic.y = graphics.y;
+        }
+      }
+
+      s.do.makeDraggable(graphics, onMove, onDone);
+
+      return graphics;
+    })
+    .method('makeRadialButton', (s, part) => {
+      const graphics = new PIXI.Graphics();
+      const scale = s.do.lyToPx();
+      graphics.x = scale * (part.x || 0);
+      graphics.y = scale * (part.y || 0);
+
+      graphics.lineStyle(4, PART_AXIS_COLOR, 0.5)
+        .drawCircle(0, 0, part.diameter/2 * scale);
+
+      return graphics;
+    })
+    .method('redrawRadius', (s, part) => {
+      s.my.partRadiusAnchor.removeChildren();
+      if (!part.diameter) return;
+      s.my.partRadiusAnchor.addChild(s.do.makeRadialButton(part));
+    })
     .method('drawActivePart', (s) => {
-      if (!s.my.partAnchor) {
+      if (!s.my.partAxisAnchor) {
         return;
       }
       const part = s.do.activePart();
-      s.my.partAnchor.removeChildren();
-
-      if (part) {
-        const graphics = new PIXI.Graphics();
-
-        const PART_AXIS_RADIUS = s.do.radius() / 20;
-
-        graphics.beginFill(PART_DISC_COLOR, 0.25)
-          .drawCircle(0, 0, PART_AXIS_RADIUS * 1.1)
-          .endFill();
-        graphics.lineStyle(4, PART_AXIS_COLOR, 0.75)
-          .moveTo(-PART_AXIS_RADIUS, 0)
-          .lineTo(PART_AXIS_RADIUS, 0)
-          .moveTo(0, PART_AXIS_RADIUS)
-          .lineTo(0, -PART_AXIS_RADIUS);
-
-        const scale = _N(s.do.radius()).div(galaxyStream.my.chosenGalaxy.d);
-        graphics.x = scale.times(part.x || 0).value;
-        graphics.y = scale.times(part.y || 0).value;
-
-        graphics.interactive = true;
-        let dragStart = null;
-        let currentPos = { x: graphics.x, y: graphics.y };
-        let dragStartPos = null;
-
-        const startDrag = (e) => {
-          dragStart = e.data;
-          dragStartPos = dragStart.getLocalPosition(graphics.parent);
-        };
-        const drag = () => {
-          if (dragStart) {
-            const dragPos = dragStart.getLocalPosition(graphics.parent);
-            console.log(
-              'new drag pos:', dragPos.x, dragPos.y,
-              'start pos:', dragStartPos.x, dragStartPos.y,
-              'initial pos:', currentPos.x, currentPos.y,
-            );
-            graphics.x = dragPos.x - dragStartPos.x + currentPos.x;
-            graphics.y = dragPos.y - dragStartPos.y + currentPos.y;
-          }
-        };
-        const stopDrag = () => {
-          dragStart = null;
-          currentPos = { x: graphics.x, y: graphics.y };
-          galaxyStream.do.updatePartPos(part, currentPos.x / scale.value, currentPos.y / scale.value);
-        };
-
-        graphics.on('mousedown', startDrag);
-        graphics.on('mousemove', drag);
-        graphics.on('mouseup', stopDrag);
-
-        console.log('graphics position: ', graphics.position, 'part:', part);
-        s.my.partAnchor.addChild(graphics);
+      s.my.partAxisAnchor.removeChildren();
+      if (!part) {
+        return;
       }
+
+      s.my.partAxisAnchor.addChild(s.do.makeCenterButton(part));
+      s.do.redrawRadius(part);
     })
     .watch('activePartIndex', 'drawActivePart')
     .method('drawButton', (s, part, color, offset) => {
@@ -129,21 +173,19 @@ export default (galaxyStream, size) => {
       }
       part.buttonGraphic.clear();
 
-      console.log('imageResources:', imgResources, 'iconType: ', part.iconType);
-
       part.buttonGraphic.beginFill(color)
         .drawCircle(0, s.do.radius(), s.do.discRadius())
         .endFill()
         .drawRect(-24, s.do.radius() - 24, 48, 48);
 
-      s.my.buttonAnchor.addChild(part.buttonGraphic);
+      s.my.partTabAnchor.addChild(part.buttonGraphic);
       const sprite = new PIXI.Sprite(imgResources[part.iconType].texture);
       sprite.x = -24;
       sprite.y = s.do.radius() - 24;
       const container = new PIXI.Container();
       container.addChild(sprite);
       container.angle = 180 + (offset - s.my.galaxyParts.length / 2 + 0.5) * s.do.distAngle();
-      s.my.buttonAnchor.addChild(container);
+      s.my.partTabAnchor.addChild(container);
     })
     .method('radius', (s) => galaxyStream.do.backRadius())
     .method('discRadius', (s) => s.do.radius() / 12)
@@ -179,7 +221,8 @@ export default (galaxyStream, size) => {
     .method('densityButton', (s, density, offset) => {
       const graphic = new PIXI.Graphics();
 
-      const c = _N(255).times(density).div(100).round().clamp(0, 255).value;
+      const c = _N(255).times(density).div(100).round()
+        .clamp(0, 255).value;
       const color = chroma(c, c, c).num();
       graphic.beginFill(color)
         .drawCircle(0, s.do.radius(), s.do.densityRadius())
@@ -255,7 +298,7 @@ export default (galaxyStream, size) => {
         return;
       }
       console.log('gcs drawing controls for ', s.value);
-      s.my.buttonAnchor.removeChildren();
+      s.my.partTabAnchor.removeChildren();
       s.my.galaxyParts.forEach((part, i) => {
         s.do.buttonFor(part, i);
       });
