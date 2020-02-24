@@ -107,36 +107,35 @@ export default ({
       s.do.drawStars();
     })
     .method('distributeStars', (s) => {
-      if (!s.my.galaxyStars) {
+      let stars = s.my.galaxyStars;
+      if (!stars) {
         return;
       }
+      stars = Array.from(stars.children.values());
+      const parts = s.my.galaxyParts;
+      const maxStars = (stars[0].diameter ** 2) / 80;
 
-      const densities = [];
+      console.log('[[[[[[[[[ stars: ', stars.length);
 
-      s.my.galaxyStars.forEach((sector) => {
-        sector.starDensity = 0;
+      const matrix = new Hexes({ scale: stars[0].diameter * 2, pointy: true });
+      stars.forEach((sector) => {
+        sector.p2d = sector.coord.toXY(matrix);
+        sector.starrDensity = 0;
         sector.stars = 0;
-        s.my.galaxyParts.forEach((part) => {
-          sector.starDensity += part.densityAt(sector);
-        });
-        if (sector.starDensity > 0) {
-          densities.push(sector.starDensity);
-        }
+        sector.maxStars = maxStars;
       });
 
-      // const starMean = mean(densities);
-      // const starDev = standardDeviation(densities);
-      // console.log('starMean', starMean, 'starDev', starDev);
-      s.my.galaxyStars.forEach((sector) => {
-        const maxStars = (sector.diameter ** 2) / 80;
-        if (sector.starDensity > 0) {
-        /*  sector.starDensity = _N(sector.starDensity).sub(starMean).div(2 * starDev).plus(0.5)
-            .clamp(1, 0).value;
-            // no longer normalizing star density
-            */
-          sector.stars = _N(sector.starDensity).clamp(0, 1).times(maxStars).round().value;
-          sector.maxStars = maxStars;
-          // console.log(sector.x, ',', sector.y, 'density: ', sector.starDensity, 'stars', sector.stars);
+      parts.forEach((part) => {
+        const t = Date.now();
+        stars.forEach((sector) => {
+          sector.starrDensity += part.densityAt(sector);
+        });
+        console.log('[[[[[ part', part, 'took', Date.now() - t, 'ms');
+      });
+
+      stars.forEach((sector) => {
+        if (sector.starrDensity > 0) {
+          sector.stars = _N(sector.starrDensity).clamp(0, 1).times(maxStars).round().value;
         }
       });
     })
@@ -193,7 +192,7 @@ export default ({
       let count = 0;
       const densityGradient = s.my.gradient;
       s.my.galaxyStars.forEach((sector) => {
-        const opacity = _N(sector.starDensity).clamp(0, 1).value;
+        const opacity = _N(sector.starrDensity).clamp(0, 1).value;
         const color = densityGradient.rgbAt(opacity);
         const crColor = chroma(color.toRgbString()).num();
 

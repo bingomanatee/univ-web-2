@@ -25,8 +25,7 @@ export class StarDisc {
   }
 
   densityAt(sector) {
-    const matrix = new Hexes({ scale: sector.diameter * 2, pointy: true });
-    const p = sector.coord.toXY(matrix);
+    const p = sector.p2d;
 
     const dist = _N(p.x).minus(this.x).sq()
       .plus(
@@ -81,8 +80,7 @@ export class GalaxySpiral {
   }
 
   densityAt(sector) {
-    const matrix = new Hexes({ scale: sector.diameter * 2, pointy: true });
-    const p = sector.coord.toXY(matrix);
+    const p = sector.p2d;
 
     const dist = this.distance(p);
     if (dist > this.diameter) {
@@ -171,9 +169,7 @@ export class GalaxyNoise {
    * @returns {d}
    */
   densityAt(sector) {
-    const matrix = new Hexes({ scale: sector.diameter * 2, pointy: true });
-    const p = sector.coord.toXY(matrix);
-
+    const p = sector.p2d;
     return _N(this.noise.noise2D(this.scaleDim(p.x), this.scaleDim(p.y)))
       .minus(1).div(2).times(this.density)
       .clamp(-1, 0).value;
