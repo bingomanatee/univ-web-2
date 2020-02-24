@@ -87,7 +87,14 @@ export default ({
     }, true)
     .method('updatePartDensity', (s, part, density) => {
       part.density = density;
-      s.do.setGalaxyParts(s.my.galaxyParts);
+      s.do.redraw();
+    })
+    .method('updatePartDiameter', (s, part, diameter) => {
+      part.diameter = diameter;
+      s.do.redraw();
+    })
+    .method('redraw', (s) => {
+      s.do.setGalaxyParts([...s.my.galaxyParts]);
       s.do.distributeStars();
       s.do.drawStars();
     })

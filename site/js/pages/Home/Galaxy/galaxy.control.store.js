@@ -7,6 +7,7 @@ import pixiStreamFactory from '../../../store/pixiStreamFactory';
 import { LY_PER_HEX, SUBSECTOR_DIV, STAR_DIV } from '../../../util/constants';
 
 const WHITE = chroma(255, 255, 255).num();
+const GREY = chroma(128, 128, 128).num();
 const BLACK = chroma(0, 0, 0).num();
 const BUTTON_COLOR = chroma(225, 250, 255).num();
 const BUTTON_OVER_COLOR = chroma(100, 150, 255).num();
@@ -24,7 +25,7 @@ PIXI.Loader.shared.load((loader, resources) => {
 
 const ptDist = (p1, p2) => Math.sqrt(
   ((p1.x - p2.x) ** 2)
-    + ((p1.y - p2.y) ** 2),
+  + ((p1.y - p2.y) ** 2),
 );
 
 export default (galaxyStream, size) => {
@@ -109,7 +110,9 @@ export default (galaxyStream, size) => {
     .method('makeCenterButton', (s) => {
       // @TODO: reuse graphic
       const part = s.do.activePart();
-      if (!part) return;
+      if (!part) {
+        return null;
+      }
       const graphics = new PIXI.Graphics();
 
       const PART_AXIS_RADIUS = s.do.radius() / 20;
@@ -150,7 +153,9 @@ export default (galaxyStream, size) => {
         return null;
       }
       const graphics = _.first(s.my.partAxisAnchor.children);
-      if (!graphics) return null;
+      if (!graphics) {
+        return null;
+      }
       return { x: graphics.x, y: graphics.y };
     })
     .method('findRadiusGraphic', (s) => {
@@ -163,47 +168,63 @@ export default (galaxyStream, size) => {
     })
     .method('makeRBdraggable', (s) => {
       const graphics = s.do.findRadiusGraphic();
-      if (!graphics) return;
-      let dragStart;
-      let dragStartPos;
-      let dragStartRadius = 0;
-      let dragCurrentRadius = 0;
+      if (!graphics) {
+        return;
+      }
 
       const startDrag = (e) => {
-        dragStart = e.data;
-        dragStartPos = dragStart.getLocalPosition(graphics.parent);
-        try {
+        let dragStart = e.data;
+        const dragStartPos = dragStart.getLocalPosition(graphics.parent);
+        let dragStartRadius = 0;
+        let dragCurrentRadius = 0;
+
+        dragStartRadius = ptDist(dragStartPos, s.do.findAxisGraphic().position);
+
+        // as we drag we temporarily scale the graphics for efficiencies' sake.
+        const drag = () => {
+          if (!dragStart) {
+            return;
+          }
+
+          const dragPos = dragStart.getLocalPosition(graphics.parent);
           const ag = s.do.findAxisGraphic();
-          dragStartRadius = ptDist(dragStartPos, ag.position);
-          console.log('start dragging, pos', dragStartPos, 'radius', dragStartRadius);
-        } catch (err) {
-          console.log('error: ', err);
-        }
-      };
+          dragCurrentRadius = ptDist(dragPos, ag.position);
+          if (dragStartRadius && dragCurrentRadius) {
+            const dragScale = dragCurrentRadius / dragStartRadius;
+            graphics.scale = { x: dragScale, y: dragScale };
+          }
+        };
+        const stopDrag = () => {
+          graphics.off('mousemove', drag);
+          graphics.off('mouseup', stopDrag);
+          graphics.off('mouseupoutside', stopDrag);
 
-      // as we drag we temporarily scale the graphics for efficiencies' sake.
-      const drag = () => {
-        if (!dragStart) return;
+          if (!dragStart) {
+            return;
+          }
 
-        const dragPos = dragStart.getLocalPosition(graphics.parent);
-        const ag = s.do.findAxisGraphic();
-        dragCurrentRadius = ptDist(dragPos, ag.position);
-        if (dragStartRadius && dragCurrentRadius) {
-          const dragScale = dragCurrentRadius / dragStartRadius;
-          console.log('scaling graphics to ', dragScale);
-          graphics.scale = { x: dragScale, y: dragScale };
-        } else {
-          console.log('bad radii:', dragStartRadius, '/current', dragCurrentRadius);
-        }
-      };
-      const stopDrag = () => {
-        dragStart = null;
-        // TODO: change radius!
+          const dragPos = dragStart.getLocalPosition(graphics.parent);
+          const ag = s.do.findAxisGraphic();
+          dragCurrentRadius = ptDist(dragPos, ag.position);
+          graphics.scale = { x: 1, y: 1 };
+
+          if (dragStartRadius && dragCurrentRadius) {
+            const dragScale = dragCurrentRadius / dragStartRadius;
+            const part = s.do.activePart();
+            if (part) {
+              galaxyStream.do.updatePartDiameter(part, dragScale * part.diameter);
+            }
+          }
+          dragStart = null;
+          // TODO: change radius!
+        };
+
+        graphics.on('mousemove', drag);
+        graphics.on('mouseup', stopDrag);
+        graphics.on('mouseupoutside', stopDrag);
       };
 
       graphics.on('mousedown', startDrag);
-      graphics.on('mousemove', drag);
-      graphics.on('mouseup', stopDrag);
     })
     .method('centerGraphicsToPart', (s, graphics) => {
       const part = s.do.activePart();
@@ -371,7 +392,7 @@ export default (galaxyStream, size) => {
       densityDisplayButtons.forEach(({ displayButton }) => s.my.densityAnchor.addChild(displayButton));
       s.do.setDensityDisplayButtons(densityDisplayButtons);
       s.do.updateDDB();
-    })
+    }, true)
     .method('drawButtons', (s) => {
       s.my.galaxyParts.forEach((part, i) => {
         let color = BUTTON_COLOR;
@@ -385,7 +406,7 @@ export default (galaxyStream, size) => {
 
         s.do.drawButton(part, color, i);
       });
-    })
+    }, true)
     .method('drawParts', (s) => {
       if (!s.my.anchor) {
         console.log('gcs ... no anchor');
@@ -396,7 +417,7 @@ export default (galaxyStream, size) => {
       s.my.galaxyParts.forEach((part, i) => {
         s.do.buttonFor(part, i);
       });
-    })
+    }, true)
     .method('updateGalaxyParts', (s, parts) => {
       console.log('gcs:  galaxy parts are ', parts);
       s.do.setGalaxyParts(parts);
@@ -406,9 +427,15 @@ export default (galaxyStream, size) => {
 
   stream.on('initApp', (s) => {
     console.log('gcs initApp');
+    const t = Date.now();
     s.do.initAnchor();
+    const t2 = Date.now();
+    console.log('========= anchor took', (t2 - t) / 1000, 'secs');
     s.do.drawDensityButtons();
+    const t3 = Date.now();
+    console.log('======== db took', (t3 - t2) / 1000, 'secs');
     s.do.drawParts();
+    console.log('======== parts took ', (Date.now() - t3) / 1000, 'secs');
   });
 
   stream.name = 'galaxyControlStore';
@@ -423,7 +450,9 @@ export default (galaxyStream, size) => {
     s.do.drawParts();
   });
 
-  stream.subscribe(false, (e) => {
+  stream.subscribe((s) => {
+    console.log('s updated');
+  }, (e) => {
     console.log('error in stream:', e);
   }, () => sub.unsubscribe());
   return stream;
