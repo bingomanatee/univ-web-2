@@ -82,60 +82,51 @@ export default ({
         }),
         GalaxySpiral.random(galaxyStars.diameter, _.random(0.5, 1.2)),
       ]);
-      s.do.distributeStars();
-      s.do.drawStars();
+      s.my.galaxyParts.forEach((part) => {
+        part.do.setGalaxyStream(s);
+      });
     }, true)
     .method('updatePartDensity', (s, part, density) => {
       part.density = density;
-      s.do.redraw();
     })
     .method('updatePartDiameter', (s, part, diameter) => {
       part.diameter = diameter;
-      s.do.redraw();
     })
-    .method('redraw', (s) => {
-      s.do.setGalaxyParts([...s.my.galaxyParts]);
-      s.do.distributeStars();
-      s.do.drawStars();
-    })
+    .method('redraw', () => debDraw())
     .method('updatePartPos', (s, part, x, y) => {
       part.x = x;
       part.y = y;
-
-      s.do.setGalaxyParts(s.my.galaxyParts);
-      s.do.distributeStars();
-      s.do.drawStars();
     })
+    .method('initSectorForDensity', (s, sector, matrix) => {
+      if (!sector.has('point2d')) {
+        sector.set('point2d', sector.coord.toXY(matrix));
+      }
+      sector.starDensity = 0;
+      sector.stars = 0;
+    })
+    .method('maxStars', (s) => (s.my.galaxyStars.getChildren()[0].diameter ** 2) / 80)
     .method('distributeStars', (s) => {
-      let stars = s.my.galaxyStars;
-      if (!stars) {
+      const parts = s.my.galaxyParts;
+      if (!parts.length) {
         return;
       }
-      stars = Array.from(stars.children.values());
-      const parts = s.my.galaxyParts;
-      const maxStars = (stars[0].diameter ** 2) / 80;
-
-      console.log('[[[[[[[[[ stars: ', stars.length);
-
-      const matrix = new Hexes({ scale: stars[0].diameter * 2, pointy: true });
-      stars.forEach((sector) => {
-        sector.p2d = sector.coord.toXY(matrix);
-        sector.starrDensity = 0;
-        sector.stars = 0;
-        sector.maxStars = maxStars;
+      const { matrix } = parts[0].my;
+      s.my.galaxyStars.forEach((sector) => {
+        s.do.initSectorForDensity(sector, matrix);
       });
 
       parts.forEach((part) => {
-        const t = Date.now();
-        stars.forEach((sector) => {
-          sector.starrDensity += part.densityAt(sector);
+        s.my.galaxyStars.forEach((sector, id) => {
+          sector.starDensity += part.densityAt(sector, id);
         });
         console.log('[[[[[ part', part, 'took', Date.now() - t, 'ms');
       });
 
-      stars.forEach((sector) => {
-        if (sector.starrDensity > 0) {
-          sector.stars = _N(sector.starrDensity).clamp(0, 1).times(maxStars).round().value;
+      const maxStars = s.do.maxStars();
+
+      s.my.galaxyStars.forEach((sector) => {
+        if (sector.starDensity > 0) {
+          sector.stars = _N(sector.starDensity).clamp(0, 1).times(maxStars).round().value;
         }
       });
     })
@@ -252,6 +243,10 @@ export default ({
     });
 
   stream.do.initGalaxyStars();
+
+  const debDraw = _.debounce(() => {
+    stream.do.drawStars();
+  }, 300);
 
   stream.on('initApp', (s) => {
     s.do.initAnchor();

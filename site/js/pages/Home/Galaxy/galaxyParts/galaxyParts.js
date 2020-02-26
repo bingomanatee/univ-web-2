@@ -160,7 +160,7 @@ export class GalaxyNoise {
   }
 
   scaleDim(n) {
-    return n * this.scale / this.diameter;
+    return (n * this.scale) / this.diameter;
   }
 
   /**
