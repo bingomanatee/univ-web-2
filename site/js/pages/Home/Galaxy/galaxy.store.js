@@ -10,7 +10,7 @@ import { standardDeviation, mean } from 'simple-statistics';
 import pixiStreamFactory from '../../../store/pixiStreamFactory';
 import { LY_PER_HEX, SUBSECTOR_DIV, STAR_DIV } from '../../../util/constants';
 import siteStore from '../../../store/site.store';
-import { StarDisc, GalaxyNoise, GalaxySpiral } from './galaxyParts';
+import galaxyNoise from './galaxyParts/galaxyNoise';
 
 const densityGradientBlue = tinygradient([
   chroma(10, 10, 10).css(),
@@ -69,22 +69,17 @@ export default ({
       galaxyStars.makeSubsectors(STAR_DIV);
       s.do.setGalaxyStars(galaxyStars);
       s.do.setGalaxyParts([
-        StarDisc.random(galaxyStars.diameter, 0.5),
-        new GalaxyNoise({
+        galaxyNoise({
           diameter: galaxyStars.diameter,
           scale: _.random(10, 20, true),
           density: _.random(0.05, 0.3),
         }),
-        new GalaxyNoise({
-          diameter: galaxyStars.diameter,
-          scale: _.random(20, 40, true),
-          density: _.random(0.01, 0.3, true),
-        }),
-        GalaxySpiral.random(galaxyStars.diameter, _.random(0.5, 1.2)),
       ]);
       s.my.galaxyParts.forEach((part) => {
         part.do.setGalaxyStream(s);
       });
+      s.do.distributeStars();
+      debDraw();
     }, true)
     .method('updatePartDensity', (s, part, density) => {
       part.density = density;
@@ -117,9 +112,10 @@ export default ({
 
       parts.forEach((part) => {
         s.my.galaxyStars.forEach((sector, id) => {
-          sector.starDensity += part.densityAt(sector, id);
+          const density = part.do.densityAt(sector, id);
+         // console.log('density at ', id, 'for', part.my.iconType, 'is', density);
+          sector.starDensity += density;
         });
-        console.log('[[[[[ part', part, 'took', Date.now() - t, 'ms');
       });
 
       const maxStars = s.do.maxStars();
@@ -183,7 +179,7 @@ export default ({
       let count = 0;
       const densityGradient = s.my.gradient;
       s.my.galaxyStars.forEach((sector) => {
-        const opacity = _N(sector.starrDensity).clamp(0, 1).value;
+        const opacity = _N(sector.starDensity).clamp(0, 1).value;
         const color = densityGradient.rgbAt(opacity);
         const crColor = chroma(color.toRgbString()).num();
 

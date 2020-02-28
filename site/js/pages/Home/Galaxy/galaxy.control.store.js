@@ -58,7 +58,7 @@ export default (galaxyStream, size) => {
       s.my.app.stage.addChild(s.my.anchor);
       s.do.centerAnchor();
     })
-    .property('activePartIndex', -1, 'integer')
+    .property('activePartIndex', 0, 'integer')
     .property('overPartIndex', -1, 'integer')
     .property('downPartIndex', -1, 'integer')
     .watch('activePartIndex', 'drawButtons')
@@ -126,11 +126,14 @@ export default (galaxyStream, size) => {
         .moveTo(0, PART_AXIS_RADIUS)
         .lineTo(0, -PART_AXIS_RADIUS);
 
-      const scale = s.do.lyToPx();
       s.do.centerGraphicsToPart(graphics, part);
 
       const onDone = ({ x, y }) => {
-        galaxyStream.do.updatePartPos(part, x / scale, y / scale);
+        const scale = s.do.lyToPx();
+        console.log('updated part from ', part.my.x, part.my.y);
+        part.do.setX(x / scale);
+        part.do.setY(y / scale);
+        console.log('updated part to ', part.my.x, part.my.y);
         s.do.redrawRadius(part);
       };
 
@@ -232,8 +235,8 @@ export default (galaxyStream, size) => {
         return;
       }
       const scale = s.do.lyToPx();
-      graphics.x = scale * (part.x || 0);
-      graphics.y = scale * (part.y || 0);
+      graphics.x = scale * (part.my.x || 0);
+      graphics.y = scale * (part.my.y || 0);
     })
     .method('makeRadialButton', (s) => {
       const part = s.do.activePart();
@@ -252,11 +255,11 @@ export default (galaxyStream, size) => {
       s.do.centerGraphicsToPart(graphics);
       const scale = s.do.lyToPx();
       graphics.beginFill(BLACK, 0.1)
-        .drawCircle(0, 0, (part.diameter / 2) * scale)
+        .drawCircle(0, 0, (part.my.diameter / 2) * scale)
         .endFill();
 
       graphics.lineStyle(1, PART_AXIS_COLOR, 1)
-        .drawCircle(0, 0, (part.diameter / 2) * scale);
+        .drawCircle(0, 0, (part.my.diameter / 2) * scale);
     })
     .method('redrawRadius', (s) => {
       const part = s.do.activePart();
@@ -292,7 +295,7 @@ export default (galaxyStream, size) => {
         .drawRect(-24, s.do.radius() - 24, 48, 48);
 
       s.my.partTabAnchor.addChild(part.buttonGraphic);
-      const sprite = new PIXI.Sprite(imgResources[part.iconType].texture);
+      const sprite = new PIXI.Sprite(imgResources[part.my.iconType].texture);
       sprite.x = -24;
       sprite.y = s.do.radius() - 24;
       const container = new PIXI.Container();
@@ -358,16 +361,8 @@ export default (galaxyStream, size) => {
         });
       } else {
         s.my.densityDisplayButtons.forEach(({ displayButton, val }) => {
-          displayButton.alpha = val <= part.density;
+          displayButton.alpha = val <= part.my.density;
         });
-      }
-    })
-    .method('updateDensity', (s, val) => {
-      // NOTE - this method SENDS a change command to the galaxyStream ValueStream.
-      // this UI listens to changes in parts, so indirectly should reflect these parts.
-      const part = s.do.activePart();
-      if (part) {
-        galaxyStream.do.updatePartDensity(part, val);
       }
     })
     .method('drawDensityButtons', (s) => {
@@ -381,8 +376,13 @@ export default (galaxyStream, size) => {
       _.range(0, 101, 5).forEach((density, i) => {
         const button = s.do.densityButton(density, i);
         button.interactive = true;
-        const val = _N(density).div(100).clamp(0, 100).value;
-        button.on('click', () => s.do.updateDensity(val));
+        const val = _N(density).div(100).clamp(0, 1).value;
+        button.on('click', () => {
+          const part = s.do.activePart();
+          if (!part) return;
+          part.do.setDensity(val);
+          s.do.drawDensityButtons();
+        });
         s.my.densityAnchor.addChild(button);
 
         const displayButton = s.do.densityDisplayButton(i);
