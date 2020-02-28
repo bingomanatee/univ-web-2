@@ -31,6 +31,14 @@ const ptDist = (p1, p2) => Math.sqrt(
 export default (galaxyStream, size) => {
   const stream = pixiStreamFactory({ size })
     .property('galaxyParts', [], 'array')
+    .watchFlat('galaxyParts', (s, parts) => {
+      console.log('galaxyParts changed to ', parts);
+      if (parts.length && s.my.activePartIndex < 0) {
+        requestAnimationFrame(() => {
+          s.do.setActivePartIndex(0);
+        });
+      }
+    })
     .property('anchor', null)
     .property('partTabAnchor', null)
     .property('partAxisAnchor', null)
@@ -45,10 +53,10 @@ export default (galaxyStream, size) => {
       if (s.my.anchor || !s.my.app) {
         return;
       }
-      console.log('gcs ... defining anchor');
       s.do.setAnchor(new PIXI.Container());
       s.do.setPartTabAnchor(new PIXI.Container());
       s.do.setDensityAnchor(new PIXI.Container());
+      console.log('>>>>>>>> partAxisAnchor made');
       s.do.setPartAxisAnchor(new PIXI.Container());
       s.do.setPartRadiusAnchor(new PIXI.Container());
       s.my.anchor.addChild(s.my.partTabAnchor);
@@ -58,9 +66,12 @@ export default (galaxyStream, size) => {
       s.my.app.stage.addChild(s.my.anchor);
       s.do.centerAnchor();
     })
-    .property('activePartIndex', 0, 'integer')
+    .property('activePartIndex', -1, 'integer')
     .property('overPartIndex', -1, 'integer')
     .property('downPartIndex', -1, 'integer')
+    .watchFlat('activePartIndex', (s, v, p) => {
+      console.log('activePartIndex set to ', v, 'from ', p);
+    })
     .watch('activePartIndex', 'drawButtons')
     .watch('activePartIndex', 'updateDDB')
     .watch('overPartIndex', 'drawButtons')
@@ -71,7 +82,6 @@ export default (galaxyStream, size) => {
       }
       return (s.my.activePartIndex >= 0) ? s.my.galaxyParts[s.my.activePartIndex] || null : null;
     })
-    .property('partAxisContainer', null)
     .method('makeDraggable', (s, graphics, onChange, onDone) => {
       graphics.interactive = true;
       let dragStart = null;
@@ -109,10 +119,13 @@ export default (galaxyStream, size) => {
     .method('lyToPx', (s) => _N(s.do.radius()).div(galaxyStream.my.chosenGalaxy.d).value)
     .method('makeCenterButton', (s) => {
       // @TODO: reuse graphic
+      console.log('---------makeCenterButton ,,,');
       const part = s.do.activePart();
       if (!part) {
+        console.log('---- makeCenterButton - no part for ', s.my.activePartIndex, ' in ', s.my.galaxyParts);
         return null;
       }
+
       const graphics = new PIXI.Graphics();
 
       const PART_AXIS_RADIUS = s.do.radius() / 20;
@@ -130,10 +143,8 @@ export default (galaxyStream, size) => {
 
       const onDone = ({ x, y }) => {
         const scale = s.do.lyToPx();
-        console.log('updated part from ', part.my.x, part.my.y);
         part.do.setX(x / scale);
         part.do.setY(y / scale);
-        console.log('updated part to ', part.my.x, part.my.y);
         s.do.redrawRadius(part);
       };
 
@@ -215,7 +226,7 @@ export default (galaxyStream, size) => {
             const dragScale = dragCurrentRadius / dragStartRadius;
             const part = s.do.activePart();
             if (part) {
-              galaxyStream.do.updatePartDiameter(part, dragScale * part.diameter);
+              part.do.setDiameter(dragScale * part.my.diameter);
             }
           }
           dragStart = null;
@@ -270,10 +281,13 @@ export default (galaxyStream, size) => {
       s.do.makeRadialButton();
     })
     .method('drawActivePart', (s) => {
+      console.log('========== DRAW ACTIVE PART');
       if (!s.my.partAxisAnchor) {
+        console.log('========== no part anchor ');
         return;
       }
       const part = s.do.activePart();
+      console.log('=========== drawActivePart for part ', part);
       s.my.partAxisAnchor.removeChildren();
       if (!part) {
         return;
@@ -409,33 +423,24 @@ export default (galaxyStream, size) => {
     }, true)
     .method('drawParts', (s) => {
       if (!s.my.anchor) {
-        console.log('gcs ... no anchor');
         return;
       }
-      console.log('gcs drawing controls for ', s.value);
       s.my.partTabAnchor.removeChildren();
       s.my.galaxyParts.forEach((part, i) => {
         s.do.buttonFor(part, i);
       });
     }, true)
     .method('updateGalaxyParts', (s, parts) => {
-      console.log('gcs:  galaxy parts are ', parts);
+      console.log('>>>>>>>>>> got galaxy parts from galaxyStream:', parts);
       s.do.setGalaxyParts(parts);
       s.do.drawParts();
       s.do.drawDensityButtons();
     });
 
   stream.on('initApp', (s) => {
-    console.log('gcs initApp');
-    const t = Date.now();
     s.do.initAnchor();
-    const t2 = Date.now();
-    console.log('========= anchor took', (t2 - t) / 1000, 'secs');
     s.do.drawDensityButtons();
-    const t3 = Date.now();
-    console.log('======== db took', (t3 - t2) / 1000, 'secs');
     s.do.drawParts();
-    console.log('======== parts took ', (Date.now() - t3) / 1000, 'secs');
   });
 
   stream.name = 'galaxyControlStore';

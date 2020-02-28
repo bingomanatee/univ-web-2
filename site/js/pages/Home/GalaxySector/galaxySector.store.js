@@ -87,7 +87,6 @@ export default ({
     .property('sectors', [], 'array')
     .property('sectorCtr', null)
     .method('updateSectors', (s, sectors) => {
-      console.log('sectors updated:', sectors);
       s.do.setSectors(sectors);
       s.do.drawSectors(sectors);
     })
@@ -417,32 +416,17 @@ export default ({
       s.do.setTargetZoomState('closed');
     })
     .method('openGalaxy', (s) => {
-      console.log('======= openGalaxy: galaxySector', s.my.galaxy, 'from targetZoomState', s.my.targetZoomState);
-      const sub = s._changes.subscribe((data) => {
-        console.log('openGalaxy _changes: ', data.name, data.value, data.prev);
-      });
-
       s.do.setTargetZoomState('open');
-      console.log('======= to ... targetZoomState', s.my.targetZoomState);
-      requestAnimationFrame(() => {
-        sub.unsubscribe();
-      });
     })
     .watchFlat('targetZoomState', (s, to, prev) => {
-      console.log(' >>>>>>>>>>>>>>>>>> watchFlat.targetZoomState to ', to, 'from', prev, '; zoomState is ', s.my.zoomState);
       if (to !== s.my.zoomState) {
         s.do.transition(true);
-      } else {
-        console.log('targetZoomState: no transition -- ', to, prev, 'zoomState = ', s.my.zoomState);
       }
     })
     .property('transTime', 0, 'number')
     .method('transition', (s, init = false) => {
       if (init) {
-        console.log('transition to ', s.my.targetZoomState, 'from', s.my.zoomState, 'transLevel = ', s.my.zoomTransLevel);
         s.do.setTransTime(Date.now());
-      } else {
-        // console.log('transitioning .... ', s.my.zoomTransLevel);
       }
 
       if (s.my.targetZoomState === s.my.zoomState) {
@@ -491,6 +475,10 @@ export default ({
         // note = NOT waiting for data to come back.
         axios.get(divideUrl(s.my.sector))
           .then(({ data }) => {
+            if (!Array.isArray(data) || !data.length) {
+              onClose();
+              return;
+            }
             s.do.updateSectors(data);
             s.do.setSectorsLoaded(true);
             s.do.drawBackground();

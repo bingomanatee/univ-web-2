@@ -26,13 +26,11 @@ export default ({ size }) => {
         ele.appendChild(app.view);
         store.do.resizeApp(iSize);
         store.do.setInitialized(true);
-        console.log('stream ', store.name, 'set app to ', app);
         store.emit('initApp');
       }
     }, true)
     .method('resizeApp', (s, size) => {
       if (!(size && is.object(size))) {
-        console.log('resizeApp requires size as object', arguments);
         return;
       }
 
@@ -43,7 +41,6 @@ export default ({ size }) => {
 
       const app = s.get('app');
       if (app) {
-        console.log('resizing to ', size);
         app.renderer.resize(width, height);
         s.emit('resized', { width, height });
       }

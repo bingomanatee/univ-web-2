@@ -49,31 +49,24 @@ export default (name, props = {}) => {
       const map = new Map();
       s.do.setCache(map); // clear the cache so densityAt sets new value
       if (!s.my.galaxyStream) {
-        console.log('refreshCache: no galaxyStream; not defining sector values')
         return;
       }
-      console.log('redefining densities');
       s.my.galaxyStream.my.galaxyStars.forEach(s.do.densityAt);
       s.my.galaxyStream.do.distributeStars();
     })
     .method('redraw', (s) => {
-      console.log('resetting cache of part', s, 'with stream', s.my.galaxyStream);
-      try {
       s.do.refreshCache();
-        if (s.my.galaxyStream) {
-          console.log('========== redrawing a galaxy because of update to ', s.my.iconType);
-          s.my.galaxyStream.do.redraw();
-        } else {
-          console.log('not redrawing part - no galaxyStream');
-        }
-      } catch (err) {
-        console.log('error in redraw', err);
+      if (s.my.galaxyStream) {
+        // console.log('========== redrawing a galaxy because of update to ', s.my.iconType);
+        s.my.galaxyStream.do.redraw();
+      } else {
+        // console.log('not redrawing part - no galaxyStream');
       }
     })
     .property('gsSub', null);
 
   stream.subscribe(false, (e) => {
     console.log('error in part stream: ', e);
-  })
+  });
   return stream;
 };
