@@ -15,26 +15,26 @@ import galaxySpiral from './galaxyParts/galaxySpiral';
 
 const densityGradientBlue = tinygradient([
   chroma(10, 10, 10).css(),
-  chroma(25, 15, 51).css(),
   chroma(125, 80, 145).css(),
   chroma(133, 102, 175).css(),
   chroma(220, 255, 255).css(),
+  chroma(255, 255, 255).css(),
 ]);
 
 const densityGradientRed = tinygradient([
   chroma(10, 10, 10).css(),
-  chroma(51, 15, 25).css(),
   chroma(145, 80, 125).css(),
   chroma(175, 102, 133).css(),
   chroma(255, 245, 245).css(),
+  chroma(255, 255, 255).css(),
 ]);
 
 const densityGradientGreen = tinygradient([
   chroma(10, 10, 10).css(),
-  chroma(15, 51, 25).css(),
   chroma(80, 145, 125).css(),
   chroma(102, 175, 133).css(),
   chroma(245, 255, 245).css(),
+  chroma(255, 255, 255).css(),
 ]);
 
 const gradient = () => _([densityGradientBlue, densityGradientGreen, densityGradientRed]).shuffle().first();
