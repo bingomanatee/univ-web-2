@@ -273,11 +273,6 @@ export default (galaxyStream, size) => {
         .drawCircle(0, 0, (part.my.diameter / 2) * scale);
     })
     .method('redrawRadius', (s) => {
-      const part = s.do.activePart();
-      if (!_.get(part, 'diameter', 0)) {
-        s.my.partRadiusAnchor.removeChildren();
-        return;
-      }
       s.do.makeRadialButton();
     })
     .method('drawActivePart', (s) => {

@@ -29,6 +29,13 @@ export default (name, props = {}) => {
     })
     .property('cache', new Map())
     // note - children must implement method 'valueAt(s, x, y)';
+    // distance is the distance from centers -- in light years.
+    .method('distance', (s, x, y) => {
+      const dx = x - s.my.x;
+      const dy = y - s.my.y;
+      return Math.sqrt(dx ** 2 + dy ** 2);
+    })
+    // distance from center - in light years.
     .method('densityAt', (s, sector, id) => {
       if (!s.my.cache.has(id)) {
         const { x: pX, y: pY } = sector.get('point2d');

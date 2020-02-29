@@ -11,6 +11,7 @@ import pixiStreamFactory from '../../../store/pixiStreamFactory';
 import { LY_PER_HEX, SUBSECTOR_DIV, STAR_DIV } from '../../../util/constants';
 import siteStore from '../../../store/site.store';
 import galaxyNoise from './galaxyParts/galaxyNoise';
+import galaxySpiral from './galaxyParts/galaxySpiral';
 
 const densityGradientBlue = tinygradient([
   chroma(10, 10, 10).css(),
@@ -56,6 +57,7 @@ export default ({
     .property('chosenGalaxy', galaxy)
     .property('gradient', gradient())
     .property('galaxyParts', [], 'array')
+    .method('lyToPx', (s) => _N(s.do.backRadius()).div(s.my.chosenGalaxy.d).value)
     .method('initGalaxyStars', (s) => {
       s.do.setGalaxyParts([]);
       if (!s.my.chosenGalaxy) {
@@ -68,11 +70,18 @@ export default ({
       });
       galaxyStars.makeSubsectors(STAR_DIV);
       s.do.setGalaxyStars(galaxyStars);
-      s.do.setGalaxyParts([
-        galaxyNoise({
-          diameter: galaxyStars.diameter,
-          scale: _.random(10, 20, true),
-          density: _.random(0.05, 0.3),
+      const noise = galaxyNoise({
+        diameter: galaxyStars.diameter / 2,
+        scale: _.random(10, 20, true),
+        density: _.random(0.02, 0.7),
+      });
+
+      noise.do.setValueCurve((n) => (n - 1) / 2);
+      noise.do.setRadiusCurve(() => 1);
+      s.do.setGalaxyParts([noise,
+        galaxySpiral({
+          diameter: galaxyStars.diameter / 2,
+          density: _.random(0.2, 0.7),
         }),
       ]);
       s.my.galaxyParts.forEach((part) => {
@@ -113,7 +122,7 @@ export default ({
       parts.forEach((part) => {
         s.my.galaxyStars.forEach((sector, id) => {
           const density = part.do.densityAt(sector, id);
-         // console.log('density at ', id, 'for', part.my.iconType, 'is', density);
+          // console.log('density at ', id, 'for', part.my.iconType, 'is', density);
           sector.starDensity += density;
         });
       });

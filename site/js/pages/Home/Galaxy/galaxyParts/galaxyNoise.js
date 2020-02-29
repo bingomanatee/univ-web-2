@@ -18,7 +18,7 @@ export default (props = {}) => {
       if ((!x) && (!y)) console.log('========== radialEffect at', x, y, 'is', re);
       const noise = s.do.noiseAt(x, y);
       // console.log('noise at ', x, y, 'is', noise);
-      return noise * re;
+      return s.my.valueCurve(noise) * re;
     })
     // attenuation -- IF ANY -- due to distance from the center.
     // note unlike other parts, noise MIGHT show up outside of its diameter if
@@ -27,7 +27,8 @@ export default (props = {}) => {
       const dx = x - s.my.x;
       const dy = y - s.my.y;
       const distance = Math.sqrt(dx ** 2 + dy ** 2);
-      // console.log('returning radial effect at distance', distance, 'for diameter', s.my.diameter, 'using radiusCurve', s.my.radiusCurve);
+      // console.log('returning radial effect at distance', distance, 'for diameter',
+      // s.my.diameter, 'using radiusCurve', s.my.radiusCurve);
       return s.my.radiusCurve(_.clamp(distance / s.my.diameter, 0, 1));
     })
     .method('noiseScale', (s) => ((s.diameter === 0) ? 0 : s.my.scale / s.my.diameter))
